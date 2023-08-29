@@ -8,6 +8,11 @@ import org.slf4j.event.*
 fun Application.configureMonitoring() {
     install(CallLogging) {
         level = Level.INFO
-        filter { call -> call.request.path().startsWith("/") }
+        format { call ->
+            val status = call.response.status()
+            val httpMethod = call.request.httpMethod.value
+            val path = call.request.path()
+            "Status: $status, HTTP method: $httpMethod, Path: $path"
+        }
     }
 }
