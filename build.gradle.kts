@@ -19,10 +19,20 @@ application {
 }
 
 repositories {
+    flatDir {
+        dirs("libs")
+    }
     mavenCentral()
 }
 
 dependencies {
+    implementation(files("/home/stormy/dev/github/egk-webapps/libs/egklib-jvm-2.0.0-SNAPSHOT.jar"))
+    implementation("org.jetbrains.kotlinx:kotlinx-cli:0.3.5")
+    implementation("com.michael-bull.kotlin-result:kotlin-result:1.1.18")
+    implementation("io.github.microutils:kotlin-logging:3.0.5")
+    implementation("pro.streem.pbandk:pbandk-runtime:0.14.2")
+    implementation("ch.qos.logback:logback-classic:1.3.4")
+
     implementation("io.ktor:ktor-server-core-jvm")
     implementation("io.ktor:ktor-server-auth-jvm")
     implementation("io.ktor:ktor-server-resources")
@@ -31,6 +41,10 @@ dependencies {
     implementation("io.ktor:ktor-serialization-kotlinx-json-jvm")
     implementation("io.ktor:ktor-server-netty-jvm")
     implementation("ch.qos.logback:logback-classic:$logback_version")
+
+    testImplementation("io.ktor:ktor-client-content-negotiation-jvm")
     testImplementation("io.ktor:ktor-server-tests-jvm")
+    testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlin_version")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
+    testImplementation("io.ktor:ktor-server-test-host:$ktor_version")
 }
