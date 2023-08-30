@@ -10,6 +10,7 @@ import kotlinx.cli.*
 import org.slf4j.LoggerFactory
 import java.io.*
 
+/*
 var credentialsPassword = ""
 
 fun main(args: Array<String>) {
@@ -80,13 +81,16 @@ fun main(args: Array<String>) {
     embeddedServer(Netty, environment).start(wait = true)
 }
 
-/*
+ */
+
 fun main() {
-    embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = Application::module)
+    val inputDir = "testInput"
+    val outputDir = "testOut/encrypt/RunEgkServer"
+    EncryptionService.initialize(inputDir, outputDir, true, true)
+
+    embeddedServer(Netty, port = 11111, host = "localhost", module = Application::module)
         .start(wait = true)
 }
-
- */
 
 fun Application.module() {
     configureSecurity()
