@@ -59,4 +59,24 @@ class RemoteEncryptorProxy(
             }
         }
     }
+
+    fun sync(device: String): Result<Boolean, String> {
+        return runBlocking {
+            val url = "$remoteURL/sync/$device"
+            val response: HttpResponse = client.get(url) {
+                headers {
+                    append(HttpHeaders.Accept, "application/json")
+                    // basicAuth("electionguard", certPassword)
+                }
+            }
+            println("RemoteEncryptorProxy sync device=${device} = ${response.status}")
+
+            if (response.status != HttpStatusCode.OK) {
+                println("response.status for $url = ${response.status}")
+                Err("$url error = ${response.status}")
+            } else {
+                Ok(true)
+            }
+        }
+    }
 }

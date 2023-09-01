@@ -50,8 +50,6 @@ class EncryptionService private constructor(inputDir: String,
                 manifest,
                 electionInit,
                 device,
-                configBaux0,
-                chainConfirmationCodes,
                 outputDir,
                 "${outputDir}/invalidDir",
                 isJson, // isJson
@@ -72,13 +70,13 @@ class EncryptionService private constructor(inputDir: String,
         // TODO sync at each submit
     }
 
-    fun done(device: String) : Result<Boolean, String> {
+    fun sync(device: String) : Result<Boolean, String> {
         val encryptor = encryptorForDevice(device)
         return try {
-            encryptor.close()
+            encryptor.sync()
             Ok(true)
         } catch (t : Throwable) {
-            Err("failed to close encryptorForDevice $device")
+            Err("failed to sync device $device")
         }
     }
 

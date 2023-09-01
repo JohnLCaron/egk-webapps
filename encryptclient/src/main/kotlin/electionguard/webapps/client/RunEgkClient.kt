@@ -9,21 +9,71 @@ import electionguard.publish.makeConsumer
 import electionguard.publish.readElectionRecord
 import electionguard.verifier.VerifyEncryptedBallots
 
-
 import io.ktor.client.*
 import io.ktor.client.engine.java.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.logging.*
 import io.ktor.serialization.kotlinx.json.*
-
-
-val remoteUrl = "http://localhost:11111/egk"
-val inputDir = "testInput"
-val outputDir = "testOut/encrypt/RunEgkServer"
-val chained = true
-val device = "device11"
+import kotlinx.cli.ArgParser
+import kotlinx.cli.ArgType
+import kotlinx.cli.default
+import kotlinx.cli.required
+import org.slf4j.LoggerFactory
+import java.io.File
+import java.io.FileInputStream
+import java.security.KeyStore
 
 fun main(args: Array<String>) {
+    val parser = ArgParser("RunEgkClientKt")
+    val inputDir by parser.option(
+        ArgType.String,
+        shortName = "in",
+        description = "Directory containing input election record, for generating test ballots"
+    ).required()
+    val device by parser.option(
+        ArgType.String,
+        shortName = "device",
+        description = "Device name"
+    ).default("testDevice")
+    val serverUrl by parser.option(
+        ArgType.String,
+        shortName = "server",
+        description = "Server URL"
+    ).default("http://localhost:11111/egk")
+    val outputDir by parser.option(
+        ArgType.String,
+        shortName = "out",
+        description = "Directory containing output election record, optional for validating"
+    )
+    /*
+    val sslKeyStore by parser.option(
+        ArgType.String,
+        shortName = "keystore",
+        description = "file path of the keystore file"
+    )
+    val keystorePassword by parser.option(
+        ArgType.String,
+        shortName = "kpwd",
+        description = "password for the entire keystore"
+    )
+    val electionguardPassword by parser.option(
+        ArgType.String,
+        shortName = "epwd",
+        description = "password for the electionguard entry"
+    )
+     */
+    parser.parse(args)
+
+    val isSsl = false // (sslKeyStore != null) && (keystorePassword != null) && (electionguardPassword != null)
+
+    println("RunEgkClient\n" +
+            "  inputDir = '$inputDir'\n" +
+            "  device = '$device'\n" +
+            "  serverUrl = '$serverUrl'\n" +
+            "  outputDir = '$outputDir'\n" +
+            "  isSsl = '$isSsl'\n" +
+            " ")
+
     val client = HttpClient(Java) {
         install(Logging) {
             logger = Logger.DEFAULT
@@ -33,21 +83,24 @@ fun main(args: Array<String>) {
         install(ContentNegotiation) {
             json()
         }
-        //engine {
-        //    config {
-        //        sslContext(SslSettings.getSslContext())
-        //    }
-        // }
+        /*
+        if (isSsl) {
+            engine {
+                config {
+                    sslContext(SslSettings.getSslContext())
+                }
+            }
+        }
+         */
     }
-    val proxy = RemoteEncryptorProxy(client, remoteUrl)
+    val proxy = RemoteEncryptorProxy(client, serverUrl)
 
     val group = productionGroup()
     val electionRecord = readElectionRecord(group, inputDir)
-    val electionInit = electionRecord.electionInit()!!
 
-    // encrypt 7 randomly generated ballots
+    // encrypt 3 randomly generated ballots
     val ballotProvider = RandomBallotProvider(electionRecord.manifest())
-    repeat(7) {
+    repeat(3) {
         val ballot = ballotProvider.makeBallot()
         val resultEncrypt = proxy.encryptBallot(device, ballot)
         val ccode = resultEncrypt.unwrap()
@@ -56,14 +109,16 @@ fun main(args: Array<String>) {
         println(" cast ${ballot.ballotId} -> $resultCast")
     }
 
-    // write out the results to outputDir
-    // encryptor.close()
+    // write out the results
+    proxy.sync(device)
 
     // verify
-    verifyOutput(group, outputDir, chained)
+    if (outputDir != null) {
+        verifyOutput(group, outputDir!!)
+    }
 }
 
-fun verifyOutput(group: GroupContext, outputDir: String, chained: Boolean = false) {
+fun verifyOutput(group: GroupContext, outputDir: String) {
     val consumer = makeConsumer(outputDir, group, false)
     var count = 0
     consumer.iterateAllEncryptedBallots { true }.forEach {
@@ -81,10 +136,10 @@ fun verifyOutput(group: GroupContext, outputDir: String, chained: Boolean = fals
 
     // Note we are verifying all ballots, not just CAST
     val verifierResult = verifier.verifyBallots(record.encryptedAllBallots { true })
-    println("verifyEncryptedBallots $verifierResult")
+    println("verifyEncryptedBallots: $verifierResult")
 
-    if (chained) {
+    if (record.config().chainConfirmationCodes) {
         val chainResult = verifier.verifyConfirmationChain(record)
-        println(" verifyChain $chainResult")
+        println("verifyChain: $chainResult")
     }
 }
