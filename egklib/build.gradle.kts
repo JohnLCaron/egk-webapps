@@ -17,7 +17,6 @@ dependencies {
     implementation("com.michael-bull.kotlin-result:kotlin-result:1.1.18")
     implementation("io.github.microutils:kotlin-logging:3.0.5")
     implementation("pro.streem.pbandk:pbandk-runtime:0.14.2")
-    implementation("ch.qos.logback:logback-classic:1.3.4")
 }
 
 tasks {

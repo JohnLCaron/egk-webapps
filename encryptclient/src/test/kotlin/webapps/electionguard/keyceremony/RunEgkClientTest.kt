@@ -1,12 +1,13 @@
-package webapps.electionguard.keyceremony
+package webapps.electionguard.client
 
+import electionguard.webapps.client.main
 import kotlin.test.Test
 
-class RunRemoteKeyCeremonyTest {
+class RunEgkClientTest {
     private val configDir = "/home/snake/dev/github/electionguard-kotlin-multiplatform/egklib/src/commonTest/data/startConfigProto"
 
     @Test
-    fun testRemoteKeyCeremonyMain() {
+    fun testRunEgkClientTest() {
         main(
             arrayOf(
                 "-in",

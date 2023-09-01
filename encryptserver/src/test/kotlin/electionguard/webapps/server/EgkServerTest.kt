@@ -106,7 +106,7 @@ class EgkServerTest {
 
             }
         }
-        val doneResult = encryptionService.done("device42")
+        val doneResult = encryptionService.sync("device42")
         println("done = $doneResult")
     }
 }
