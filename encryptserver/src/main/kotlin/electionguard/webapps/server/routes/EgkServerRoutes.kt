@@ -4,6 +4,7 @@ import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.unwrap
 import com.github.michaelbull.result.unwrapError
 import electionguard.ballot.EncryptedBallot
+import electionguard.ballot.PlaintextBallot
 import electionguard.json2.*
 import electionguard.json2.EncryptionResponseJson
 import io.ktor.http.*
@@ -66,7 +67,7 @@ fun Route.serverRouting() {
                 }
             }
 
-            get("spoilBallot/{device}/{ccode}") {
+            get("challengeBallot/{device}/{ccode}") {
                 val device = call.parameters["device"] ?: return@get call.respondText(
                     "Missing device",
                     status = HttpStatusCode.BadRequest
@@ -88,6 +89,29 @@ fun Route.serverRouting() {
                     )
                 }
             }
+
+        get("challengeAndDecryptBallot/{device}/{ccode}") {
+            val device = call.parameters["device"] ?: return@get call.respondText(
+                "Missing device",
+                status = HttpStatusCode.BadRequest
+            )
+            val ccode = call.parameters["ccode"] ?: return@get call.respondText(
+                "Missing id",
+                status = HttpStatusCode.BadRequest
+            )
+            val result = encryptionService.challengeAndDecrypt(device, ccode)
+            if (result is Ok) {
+                val plaintextBallot : PlaintextBallot = result.unwrap()
+                val response = plaintextBallot.publishJson()
+                println("challengeAndDecrypt ${device} id=${plaintextBallot.ballotId} success")
+                call.respond(response)
+            } else {
+                call.respondText(
+                    "EgkServer challengeAndDecryptBallot ccode=${ccode} failed '${result.unwrapError()}'",
+                    status = HttpStatusCode.BadRequest
+                )
+            }
+        }
 
             get("sync/{device}") {
                 val device = call.parameters["device"] ?: return@get call.respondText(
