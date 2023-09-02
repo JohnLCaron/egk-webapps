@@ -1,5 +1,7 @@
 package electionguard.webapps.client
 
+import com.github.michaelbull.result.Ok
+import com.github.michaelbull.result.getError
 import com.github.michaelbull.result.unwrap
 import electionguard.core.ElGamalPublicKey
 import electionguard.core.GroupContext
@@ -22,6 +24,7 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileInputStream
 import java.security.KeyStore
+import kotlin.random.Random
 
 fun main(args: Array<String>) {
     val parser = ArgParser("RunEgkClientKt")
@@ -98,7 +101,32 @@ fun main(args: Array<String>) {
     val group = productionGroup()
     val electionRecord = readElectionRecord(group, inputDir)
 
-    // encrypt 3 randomly generated ballots
+    // encrypt randomly generated ballots
+    val nballots = 17
+    val ballotProvider = RandomBallotProvider(electionRecord.manifest())
+    repeat(nballots) {
+        val ballot = ballotProvider.makeBallot()
+        val encryptResult = proxy.encryptBallot(device, ballot)
+        if (encryptResult is Ok) {
+            val ccode = encryptResult.unwrap()
+            // randomly challenge a few
+            val challengeIt = Random.nextInt(nballots) < 2
+            if (challengeIt) {
+                val decryptResult = proxy.challengeAndDecryptBallot(device, ccode)
+                if (decryptResult is Ok) {
+                    println("challenged $ccode, decryption Ok = ${ballot == decryptResult.unwrap()}")
+                } else {
+                    println("challengeAndDecrypt failed = ${decryptResult.getError()}")
+                }
+            } else {
+                proxy.castBallot(device, ccode)
+            }
+        } else {
+            println("encryptResult failed = ${encryptResult.getError()}")
+        }
+    }
+
+    /* encrypt 3 randomly generated ballots
     val ballotProvider = RandomBallotProvider(electionRecord.manifest())
     repeat(3) {
         val ballot = ballotProvider.makeBallot()
@@ -108,6 +136,8 @@ fun main(args: Array<String>) {
         val resultCast = proxy.castBallot(device, ccode)
         println(" cast ${ballot.ballotId} -> $resultCast")
     }
+
+     */
 
     // write out the results
     proxy.sync(device)

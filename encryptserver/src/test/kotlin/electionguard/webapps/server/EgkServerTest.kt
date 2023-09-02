@@ -8,9 +8,12 @@ import io.ktor.server.testing.*
 import kotlin.test.*
 
 import electionguard.ballot.PlaintextBallot
+import electionguard.core.productionGroup
 import electionguard.input.RandomBallotProvider
 import electionguard.json2.publishJson
 import electionguard.json2.EncryptionResponseJson
+import electionguard.publish.makePublisher
+import electionguard.publish.readElectionRecord
 import electionguard.webapps.server.models.EncryptionService
 import electionguard.webapps.server.plugins.configureRouting
 import electionguard.webapps.server.plugins.configureSerialization
@@ -22,9 +25,18 @@ class EgkServerTest {
     val inputDir = "/home/stormy/dev/github/electionguard-kotlin-multiplatform/egklib/src/commonTest/data/workflow/allAvailableJson"
     val outputDir = "testOut/encrypt/testEncryptionService"
 
+    init {
+        // clean out the output directory
+        val group = productionGroup()
+        val electionRecord = readElectionRecord(group, inputDir)
+        val electionInit = electionRecord.electionInit()!!
+        val publisher = makePublisher(outputDir, true, electionRecord.isJson())
+        publisher.writeElectionInitialized(electionInit)
+    }
+
     @Test
     fun testBadRoute() = testApplication {
-        EncryptionService.initialize(inputDir, outputDir, true, true)
+        EncryptionService.initialize(inputDir, outputDir)
 
         application {
             configureRouting()
@@ -40,7 +52,7 @@ class EgkServerTest {
 
     @Test
     fun testBadCast() = testApplication {
-        EncryptionService.initialize(inputDir, outputDir, true, true)
+        EncryptionService.initialize(inputDir, outputDir)
 
         application {
             configureRouting()
@@ -49,30 +61,30 @@ class EgkServerTest {
         val response = client.get("/egk/castBallot/device0/42").apply {
             println("status = $status bodyAsText = ${bodyAsText()}")
             assertEquals(HttpStatusCode.BadRequest, status)
-            assertEquals("EgkServer cast ccode=42 failed 'Tried to submit unknown ballot ccode=42'", bodyAsText())
+            assertEquals("EgkServer cast ccode=42 failed 'illegal confirmation code (UInt256 must have exactly 32 bytes)'", bodyAsText())
         }
         println("response = $response")
     }
 
     @Test
     fun testBadSpoil() = testApplication {
-        EncryptionService.initialize(inputDir, outputDir, true, true)
+        EncryptionService.initialize(inputDir, outputDir)
 
         application {
             configureRouting()
         }
 
-        val response = client.get("/egk/spoilBallot/device0/xyz").apply {
+        val response = client.get("/egk/challengeBallot/device0/xyz").apply {
             println("status = $status bodyAsText = ${bodyAsText()}")
             assertEquals(HttpStatusCode.BadRequest, status)
-            assertEquals("EgkServer spoil ccode=xyz failed 'Tried to submit unknown ballot ccode=xyz'", bodyAsText())
+            assertEquals("EgkServer spoil ccode=xyz failed 'illegal confirmation code'", bodyAsText())
         }
         println("response = $response")
     }
 
     @Test
     fun testEncrypt() = testApplication {
-        EncryptionService.initialize(inputDir, outputDir, true, true)
+        EncryptionService.initialize(inputDir, outputDir)
 
         application {
             configureRouting()

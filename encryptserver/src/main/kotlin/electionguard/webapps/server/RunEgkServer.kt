@@ -54,7 +54,7 @@ fun main(args: Array<String>) {
             "  serverPort = '$sport'\n" +
             " ")
 
-    EncryptionService.initialize(inputDir, outputDir, true, true)
+    EncryptionService.initialize(inputDir, outputDir)
 
     if (isSsl) {
         val keyStoreFile = File(sslKeyStore)

@@ -20,12 +20,11 @@ import electionguard.publish.readElectionRecord
 
 class EncryptionService private constructor(inputDir: String,
                              val outputDir: String,
-                             createNew: Boolean,
-                             val isJson : Boolean = true
     ) {
     val group = productionGroup(PowRadixOption.HIGH_MEMORY_USE, ProductionMode.Mode4096)
     val manifest : Manifest
     val electionInit : ElectionInitialized
+    val isJson : Boolean
     val chainConfirmationCodes : Boolean
     val configBaux0 : ByteArray
 
@@ -39,7 +38,8 @@ class EncryptionService private constructor(inputDir: String,
         configBaux0 = config.configBaux0
 
         electionInit = electionRecord.electionInit()!!
-        val publisher = makePublisher(outputDir, createNew, isJson)
+        isJson = electionRecord.isJson()
+        val publisher = makePublisher(outputDir, false, isJson)
         publisher.writeElectionInitialized(electionInit)
     }
 
@@ -52,8 +52,7 @@ class EncryptionService private constructor(inputDir: String,
                 device,
                 outputDir,
                 "${outputDir}/invalidDir",
-                isJson, // isJson
-                false,
+                isJson,
             )
         }
     }
@@ -64,10 +63,19 @@ class EncryptionService private constructor(inputDir: String,
     }
 
     fun submit(device: String, ccode: String, state: EncryptedBallot.BallotState) : Result<Boolean, String> {
+        try {
+            val encryptor = encryptorForDevice(device)
+            val ba = ccode.fromHex() ?: return Err("illegal confirmation code")
+            return encryptor.submit(UInt256(ba), state)
+        } catch (t : Throwable) {
+            return Err("illegal confirmation code (${t.message})")
+        }
+    }
+
+    fun challengeAndDecrypt(device: String, ccode: String) : Result<PlaintextBallot, String> {
         val encryptor = encryptorForDevice(device)
-        val ba = ccode.fromHex() ?: throw RuntimeException("illegal confirmation code")
-        return encryptor.submit(UInt256(ba), state)
-        // TODO sync at each submit
+        val ba = ccode.fromHex() ?: return Err("illegal confirmation code")
+        return encryptor.challengeAndDecrypt(UInt256(ba))
     }
 
     fun sync(device: String) : Result<Boolean, String> {
@@ -83,15 +91,12 @@ class EncryptionService private constructor(inputDir: String,
     companion object {
         @Volatile private var instance: EncryptionService? = null
 
-        fun initialize(inputDir: String,
-                        outputDir: String,
-                        createNew: Boolean,
-                        isJson : Boolean) =
+        fun initialize(inputDir: String, outputDir: String) =
             instance ?: synchronized(this) {
-                instance ?: EncryptionService(inputDir, outputDir, createNew, isJson).also { instance = it }
+                instance ?: EncryptionService(inputDir, outputDir).also { instance = it }
             }
 
-        // dont call until initialized
+        // dont call until after initialized() is called
         fun getInstance() : EncryptionService = instance!!
     }
 }

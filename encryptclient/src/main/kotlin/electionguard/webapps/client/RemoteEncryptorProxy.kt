@@ -60,6 +60,47 @@ class RemoteEncryptorProxy(
         }
     }
 
+    fun challengeBallot(device: String, ccode: String): Result<Boolean, String> {
+        return runBlocking {
+            val url = "$remoteURL/challengeBallot/$device/$ccode"
+            val response: HttpResponse = client.get(url) {
+                headers {
+                    append(HttpHeaders.Accept, "application/json")
+                    // basicAuth("electionguard", certPassword)
+                }
+            }
+            println("RemoteEncryptorProxy challengeBallot for ccode=${ccode} = ${response.status}")
+
+            if (response.status != HttpStatusCode.OK) {
+                println("response.status for $url = ${response.status}")
+                Err("$url error = ${response.status}")
+            } else {
+                Ok(true)
+            }
+        }
+    }
+
+    fun challengeAndDecryptBallot(device: String, ccode: String): Result<PlaintextBallot, String> {
+        return runBlocking {
+            val url = "$remoteURL/challengeAndDecryptBallot/$device/$ccode"
+            val response: HttpResponse = client.get(url) {
+                headers {
+                    append(HttpHeaders.Accept, "application/json")
+                    // basicAuth("electionguard", certPassword)
+                }
+            }
+            println("RemoteEncryptorProxy castBallot for ccode=${ccode} = ${response.status}")
+
+            if (response.status != HttpStatusCode.OK) {
+                println("response.status for $url = ${response.status}")
+                Err("$url error = ${response.status}")
+            } else {
+                val dballotJson: PlaintextBallotJson = response.body()
+                if (response.status == HttpStatusCode.OK) Ok(dballotJson.import()) else Err(response.toString())
+            }
+        }
+    }
+
     fun sync(device: String): Result<Boolean, String> {
         return runBlocking {
             val url = "$remoteURL/sync/$device"
