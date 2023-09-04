@@ -1,11 +1,11 @@
-package webapps.electionguard
+package electionguard.webapps.keyceremonytrustee
 
 import io.ktor.server.application.*
 import io.ktor.server.plugins.callloging.*
-import webapps.electionguard.plugins.*
 import electionguard.core.PowRadixOption
 import electionguard.core.ProductionMode
 import electionguard.core.productionGroup
+import electionguard.webapps.keyceremonytrustee.plugins.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.request.*
@@ -95,7 +95,7 @@ fun Application.module() {
             "Status: $status, HTTP method: $httpMethod, Path: $path"
         }
     }
-    configureSecurity()
+    configureSecurity(credentialsPassword)
     configureSerialization()
     configureAdministration()
     configureRouting()

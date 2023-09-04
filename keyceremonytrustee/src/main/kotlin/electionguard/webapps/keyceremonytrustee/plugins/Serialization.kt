@@ -1,4 +1,4 @@
-package webapps.electionguard.plugins
+package electionguard.webapps.keyceremonytrustee.plugins
 
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.plugins.contentnegotiation.*

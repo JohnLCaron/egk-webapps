@@ -1,4 +1,4 @@
-package webapps.electionguard.models
+package electionguard.webapps.keyceremonytrustee.models
 
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok

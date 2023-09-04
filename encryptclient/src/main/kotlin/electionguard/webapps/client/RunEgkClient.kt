@@ -48,6 +48,11 @@ fun main(args: Array<String>) {
         shortName = "out",
         description = "Directory containing output election record, optional for validating"
     )
+    val nballots by parser.option(
+        ArgType.Int,
+        shortName = "nballots",
+        description = "Number of test ballots to send to server"
+    ).default(11)
     /*
     val sslKeyStore by parser.option(
         ArgType.String,
@@ -102,7 +107,6 @@ fun main(args: Array<String>) {
     val electionRecord = readElectionRecord(group, inputDir)
 
     // encrypt randomly generated ballots
-    val nballots = 17
     val ballotProvider = RandomBallotProvider(electionRecord.manifest())
     repeat(nballots) {
         val ballot = ballotProvider.makeBallot()

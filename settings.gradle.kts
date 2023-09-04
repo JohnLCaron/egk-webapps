@@ -15,7 +15,7 @@ dependencyResolutionManagement {
             plugin("serialization", "org.jetbrains.kotlin.plugin.serialization").versionRef("kotlin-version")
             plugin("formatter", "tech.formatter-kt.formatter").version("0.7.9")
 
-            library("kotlinx-cli", "org.jetbrains.kotlinx:kotlinx-cli:0.3.5")
+            library("kotlinx-cli", "org.jetbrains.kotlinx:kotlinx-cli:0.3.6")
             library("kotlinx-datetime", "org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
             library("kotlinx-coroutines-core", "org.jetbrains.kotlinx", "kotlinx-coroutines-core").versionRef("coroutines-version")
             library("kotlinx-serialization-json", "org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0")
@@ -37,7 +37,6 @@ dependencyResolutionManagement {
             //// ktor server
             library("ktor-server-core-jvm", "io.ktor", "ktor-server-core-jvm").versionRef("ktor-version")
             library("ktor-server-auth-jvm", "io.ktor", "ktor-server-auth-jvm").versionRef("ktor-version")
-            library("ktor-server-auth-jwt-jvm", "io.ktor", "ktor-server-auth-jwt-jvm").versionRef("ktor-version")
             library("ktor-server-content-negotiation-jvm", "io.ktor", "ktor-server-content-negotiation-jvm")
                 .versionRef("ktor-version")
             library("ktor-server-netty-jvm", "io.ktor", "ktor-server-netty-jvm").versionRef("ktor-version")
@@ -50,7 +49,6 @@ dependencyResolutionManagement {
                 listOf(
                     "ktor-server-core-jvm",
                     "ktor-server-auth-jvm",
-                    "ktor-server-auth-jwt-jvm",
                     "ktor-server-content-negotiation-jvm",
                     "ktor-server-netty-jvm",
                     "ktor-serialization-kotlinx-json-jvm",
@@ -111,4 +109,5 @@ dependencyResolutionManagement {
 include ("egklib")
 include ("encryptserver")
 include ("encryptclient")
+include ("keyceremonytrustee")
 
