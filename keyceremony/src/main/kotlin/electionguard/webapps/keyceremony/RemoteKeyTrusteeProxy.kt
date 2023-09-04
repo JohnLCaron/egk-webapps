@@ -68,12 +68,18 @@ class RemoteKeyTrusteeProxy(
                 println("response.status for $url = ${response.status}")
                 Err("$url error = ${response.status}")
             } else {
-                val publicKeysJson: PublicKeysJson = response.body()
-                val publicKeys = publicKeysJson.import(group)
-                if (publicKeys == null) {
-                    Err("$id error getting publicKeys = ${response.status}")
+                try {
+                    val publicKeysJson: PublicKeysJson = response.body()
+                    val publicKeys = publicKeysJson.import(group)
+                    if (publicKeys == null) {
+                        Err("$id error getting publicKeys = ${response.status}")
+                    } else {
+                        this@RemoteKeyTrusteeProxy.publicKeys = publicKeys
+                        Ok(publicKeys)
+                    }
+                } catch (t : Throwable) {
+                    Err(t.message?: "exception importing publicKeys")
                 }
-                Ok(publicKeys)
             }
         }
     }

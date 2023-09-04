@@ -21,6 +21,7 @@ import io.ktor.client.engine.java.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.logging.*
 import io.ktor.serialization.kotlinx.json.*
+import kotlinx.cli.default
 import java.io.FileInputStream
 import java.security.KeyStore
 import javax.net.ssl.SSLContext
@@ -66,7 +67,8 @@ fun main(args: Array<String>) {
         ArgType.String,
         shortName = "remoteUrl",
         description = "URL of keyceremony trustee webapp "
-    ).required()
+    ).default("http://localhost:11183/egk")
+    /*
     val sslKeyStore by parser.option(
         ArgType.String,
         shortName = "keystore",
@@ -82,25 +84,24 @@ fun main(args: Array<String>) {
         shortName = "epwd",
         description = "password for the electionguard entry"
     ).required()
+
+     */
     val createdBy by parser.option(
         ArgType.String,
         shortName = "createdBy",
         description = "who created for ElectionInitialized metadata"
     )
-    val electionDate by parser.option(
-        ArgType.String,
-        shortName = "electionDate",
-        description = "election date"
-    )
-    val info by parser.option(
-        ArgType.String,
-        shortName = "info",
-        description = "jurisdictional information"
-    )
     parser.parse(args)
-    keystore = sslKeyStore
-    ksPassword = keystorePassword
-    egPassword = electionguardPassword
+
+    val isSsl = false // (sslKeyStore != null) && (keystorePassword != null) && (electionguardPassword != null)
+
+    /*
+    if (isSsl) {
+        keystore = sslKeyStore
+        ksPassword = keystorePassword
+        egPassword = electionguardPassword
+    }
+     */
 
     val group = productionGroup()
     var createdFrom : String
@@ -113,12 +114,22 @@ fun main(args: Array<String>) {
                     "  electionManifest = '$electionManifest'\n" +
                     "  nguardians = $nguardians quorum = $quorum\n" +
                     "  outputDir = '$outputDir'\n" +
-                    "  sslKeyStore = '$sslKeyStore'\n"
+                    "  isSsl = $isSsl\n"
         )
+        // fun makeElectionConfig(
+        //    configVersion: String,
+        //    constants: ElectionConstants,
+        //    numberOfGuardians: Int,
+        //    quorum: Int,
+        //    manifestBytes: ByteArray,
+        //    chainConfirmationCodes: Boolean,
+        //    baux0: ByteArray, // B_aux,0 from eq 59,60
+        //    metadata: Map<String, String> = emptyMap(),
+        //): ElectionConfig {
         makeElectionConfig(protocolVersion, group.constants, nguardians!!, quorum!!,
-            electionDate ?: "N/A",
-            info ?: "N/A",
             ByteArray(0), // TODO manifest
+            false, // TODO chainConfirmationCodes
+            ByteArray(0), // TODO baux0
             mapOf(
                 Pair("CreatedBy", createdBy ?: "RunRemoteKeyCeremony"),
                 Pair("CreatedFromElectionManifest", electionManifest!!),
@@ -131,7 +142,7 @@ fun main(args: Array<String>) {
             "RunRemoteKeyCeremony\n" +
                     "  inputDir = '$inputDir'\n" +
                     "  outputDir = '$outputDir'\n" +
-                    "  sslKeyStore = '$sslKeyStore'\n"
+                    "  isSsl = $isSsl\n"
         )
         consumerIn.readElectionConfig().getOrThrow { IllegalStateException(it) }
     }
@@ -158,11 +169,15 @@ fun runKeyCeremony(
         install(ContentNegotiation) {
             json()
         }
-        engine {
-            config {
-                sslContext(SslSettings.getSslContext())
+        /*
+        if (isSsl) {
+            engine {
+                config {
+                    sslContext(SslSettings.getSslContext())
+                }
             }
         }
+         */
     }
 
     val trustees: List<RemoteKeyTrusteeProxy> = List(config.numberOfGuardians) {

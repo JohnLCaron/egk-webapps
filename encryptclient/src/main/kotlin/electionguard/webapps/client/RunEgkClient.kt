@@ -130,19 +130,6 @@ fun main(args: Array<String>) {
         }
     }
 
-    /* encrypt 3 randomly generated ballots
-    val ballotProvider = RandomBallotProvider(electionRecord.manifest())
-    repeat(3) {
-        val ballot = ballotProvider.makeBallot()
-        val resultEncrypt = proxy.encryptBallot(device, ballot)
-        val ccode = resultEncrypt.unwrap()
-        println(" encrypt ${ballot.ballotId} -> $ccode")
-        val resultCast = proxy.castBallot(device, ccode)
-        println(" cast ${ballot.ballotId} -> $resultCast")
-    }
-
-     */
-
     // write out the results
     proxy.sync(device)
 

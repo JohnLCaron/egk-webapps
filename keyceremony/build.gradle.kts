@@ -1,12 +1,17 @@
+
+buildscript {
+    repositories {
+    }
+}
+
 plugins {
     kotlin("jvm") version "1.9.10"
     id("io.ktor.plugin") version "2.3.3"
     id("org.jetbrains.kotlin.plugin.serialization") version "1.9.10"
-    application
 }
 
 application {
-    mainClass.set("electionguard.webapps.keyceremonytrustee.RunRemoteTrusteeKt")
+    mainClass.set("electionguard.webapps.keyceremony.RunRemoteKeyCeremonyKt")
     val isDevelopment: Boolean = project.ext.has("development")
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
 }
@@ -19,9 +24,16 @@ dependencies {
     implementation(libs.pbandk) // needed to encrypt Contest data
     implementation(libs.microutils.logging)
 
-    implementation(libs.bundles.ktor.server)
-    implementation(libs.bundles.logging.server)
+    implementation(libs.bundles.ktor.client)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.bundles.logging.client)
 
+    testImplementation(libs.kotlin.test)
+    testImplementation(libs.kotlin.test.junit)
+    testImplementation(libs.mockk)
+
+    testImplementation(libs.kotlin.test)
+    testImplementation(libs.kotlin.test.junit)
     testImplementation(libs.ktor.server.tests.jvm)
-    testImplementation(libs.kotlin.test.junit) // for some reason, we cant use junit5
+    testImplementation(libs.ktor.client.content.negotiation)
 }

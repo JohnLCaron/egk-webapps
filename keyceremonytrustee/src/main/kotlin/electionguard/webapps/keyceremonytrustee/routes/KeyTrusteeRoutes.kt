@@ -18,7 +18,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
 fun Route.trusteeRouting() {
-    route("/ktrustee") {
+    route("/egk/ktrustee") {
         // https://ktor.io/docs/basic.html
         authenticate("auth-basic") {
             get {
