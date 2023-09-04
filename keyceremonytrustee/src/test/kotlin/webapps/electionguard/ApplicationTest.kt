@@ -1,11 +1,11 @@
 package webapps.electionguard
 
+import electionguard.webapps.keyceremonytrustee.plugins.configureRouting
 import io.ktor.http.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import kotlin.test.*
 import io.ktor.server.testing.*
-import webapps.electionguard.plugins.*
 
 class ApplicationTest {
     @Test

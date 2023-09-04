@@ -110,4 +110,5 @@ include ("egklib")
 include ("encryptserver")
 include ("encryptclient")
 include ("keyceremonytrustee")
+include ("keyceremony")
 

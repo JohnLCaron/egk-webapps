@@ -23,22 +23,22 @@ var credentialsPassword = ""
 val groupContext = productionGroup(PowRadixOption.HIGH_MEMORY_USE, ProductionMode.Mode4096)
 
 fun main(args: Array<String>) {
-    val parser = ArgParser("KeyCeremonyRemoteTrustee")
+    val parser = ArgParser("RunRemoteTrustee")
     val sslKeyStore by parser.option(
         ArgType.String,
         shortName = "keystore",
         description = "file path of the keystore file"
-    ).required()
+    )
     val keystorePassword by parser.option(
         ArgType.String,
         shortName = "kpwd",
         description = "password for the entire keystore"
-    ).required()
+    )
     val electionguardPassword by parser.option(
         ArgType.String,
         shortName = "epwd",
         description = "password for the electionguard entry"
-    ).required()
+    )
     val trustees by parser.option(
         ArgType.String,
         shortName = "trusteeDir",
@@ -53,10 +53,20 @@ fun main(args: Array<String>) {
 
     val sport = serverPort ?: 11183
     trusteeDir = trustees
-    credentialsPassword = electionguardPassword
+
+    val isSsl = false // (sslKeyStore != null) && (keystorePassword != null) && (electionguardPassword != null)
+
+    /*
+    if (isSsl) {
+        keystore = sslKeyStore
+        ksPassword = keystorePassword
+        egPassword = electionguardPassword
+        credentialsPassword = electionguardPassword
+   }
+     */
 
     println("KeyCeremonyRemoteTrustee\n" +
-            "  sslKeyStore = '$sslKeyStore'\n" +
+            "  isSsl = $isSsl\n" +
             "  serverPort = '$sport'\n" +
             "  trusteeDir = '$trusteeDir'\n" +
             " ")
@@ -64,24 +74,29 @@ fun main(args: Array<String>) {
     // println("trusteeDir = '$trusteeDir'")
     // io.ktor.server.netty.EngineMain.main(args)
 
-    val keyStoreFile = File(sslKeyStore)
-    val keyStore: KeyStore = KeyStore.getInstance(KeyStore.getDefaultType()) // LOOK assumes jks
-    keyStore.load(FileInputStream(keyStoreFile), keystorePassword.toCharArray())
+    if (isSsl) {
+        val keyStoreFile = File(sslKeyStore)
+        val keyStore: KeyStore = KeyStore.getInstance(KeyStore.getDefaultType()) // LOOK assumes jks
+        keyStore.load(FileInputStream(keyStoreFile), keystorePassword!!.toCharArray())
 
-    val environment = applicationEngineEnvironment {
-        log = LoggerFactory.getLogger("ktor.application")
-        sslConnector(
-            keyStore = keyStore,
-            keyAlias = "electionguard",
-            keyStorePassword = { keystorePassword.toCharArray() },
-            privateKeyPassword = { electionguardPassword.toCharArray() }) {
-            port = sport
-            keyStorePath = keyStoreFile
+        val environment = applicationEngineEnvironment {
+            log = LoggerFactory.getLogger("ktor.application")
+            sslConnector(
+                keyStore = keyStore,
+                keyAlias = "electionguard",
+                keyStorePassword = { keystorePassword!!.toCharArray() },
+                privateKeyPassword = { electionguardPassword!!.toCharArray() }) {
+                port = sport
+                keyStorePath = keyStoreFile
+            }
+            module(Application::module)
         }
-        module(Application::module)
-    }
+        embeddedServer(Netty, environment).start(wait = true)
 
-    embeddedServer(Netty, environment).start(wait = true)
+    } else {
+        embeddedServer(Netty, port = sport, host = "localhost", module = Application::module)
+            .start(wait = true)
+    }
 }
 
 @Suppress("unused") // application.conf references the main function. This annotation prevents the IDE from marking it as unused.
