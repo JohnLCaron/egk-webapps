@@ -1,4 +1,4 @@
-package webapps.electionguard.plugins
+package electionguard.webapps.keyceremonytrustee.plugins
 
 import io.ktor.server.engine.*
 import io.ktor.server.application.*

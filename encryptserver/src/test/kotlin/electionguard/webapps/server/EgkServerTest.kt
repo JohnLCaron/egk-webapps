@@ -22,8 +22,8 @@ import io.ktor.client.plugins.contentnegotiation.*
 import kotlinx.serialization.json.*
 
 class EgkServerTest {
-    val inputDir = "/home/stormy/dev/github/electionguard-kotlin-multiplatform/egklib/src/commonTest/data/workflow/allAvailableJson"
-    val outputDir = "testOut/encrypt/testEncryptionService"
+    val inputDir = "../testInput/chained"
+    val outputDir = "testOut/encrypt/EgkServerTest"
 
     init {
         // clean out the output directory

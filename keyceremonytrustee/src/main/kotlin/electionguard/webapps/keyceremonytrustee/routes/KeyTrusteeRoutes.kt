@@ -1,20 +1,21 @@
 package webapps.electionguard.routes
 
-import webapps.electionguard.groupContext
-import webapps.electionguard.models.*
 import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.unwrap
 import com.github.michaelbull.result.unwrapError
 import electionguard.json2.*
 import electionguard.keyceremony.EncryptedKeyShare
+import electionguard.webapps.keyceremonytrustee.groupContext
+import electionguard.webapps.keyceremonytrustee.models.RemoteKeyTrustee
+import electionguard.webapps.keyceremonytrustee.models.remoteKeyTrustees
+import electionguard.webapps.keyceremonytrustee.trusteeDir
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import webapps.electionguard.trusteeDir
 
 fun Route.trusteeRouting() {
     route("/ktrustee") {

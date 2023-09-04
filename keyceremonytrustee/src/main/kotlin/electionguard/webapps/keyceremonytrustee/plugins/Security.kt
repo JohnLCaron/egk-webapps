@@ -1,10 +1,9 @@
-package webapps.electionguard.plugins
+package electionguard.webapps.keyceremonytrustee.plugins
 
 import io.ktor.server.auth.*
 import io.ktor.server.application.*
-import webapps.electionguard.credentialsPassword
 
-fun Application.configureSecurity() {
+fun Application.configureSecurity(credentialsPassword : String) {
 
     authentication {
         // https://ktor.io/docs/basic.html
