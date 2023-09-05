@@ -14,7 +14,8 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 
 import mu.KotlinLogging
-private val logger = KotlinLogging.logger("RemoteGuardianJson")
+
+private val logger = KotlinLogging.logger("RemoteKeyTrustee")
 
 @Serializable
 data class RemoteKeyTrustee(val id: String,

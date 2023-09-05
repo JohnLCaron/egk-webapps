@@ -1,4 +1,4 @@
-package webapps.electionguard.routes
+package electionguard.webapps.keyceremonytrustee.routes
 
 import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.Result

@@ -1,4 +1,4 @@
-package webapps.electionguard.keyceremony
+package electionguard.webapps.keyceremony
 
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.getOrThrow

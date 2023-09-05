@@ -6,7 +6,7 @@ plugins {
 }
 
 application {
-    mainClass.set("electionguard.webapps.keyceremonytrustee.RunRemoteTrusteeKt")
+    mainClass.set("electionguard.webapps.keyceremonytrustee.RunKeyCeremonyTrusteeKt")
     val isDevelopment: Boolean = project.ext.has("development")
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
 }
