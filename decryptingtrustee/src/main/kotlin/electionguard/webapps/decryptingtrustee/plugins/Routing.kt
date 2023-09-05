@@ -1,11 +1,10 @@
-package electionguard.webapps.keyceremonytrustee.plugins
+package electionguard.webapps.decryptingtrustee.plugins
 
-import electionguard.webapps.keyceremonytrustee.routes.trusteeRouting
+import electionguard.webapps.decryptingtrustee.routes.trusteeRouting
 import io.ktor.server.routing.*
 import io.ktor.server.application.*
 
 fun Application.configureRouting() {
-
     routing {
         trusteeRouting()
     }
