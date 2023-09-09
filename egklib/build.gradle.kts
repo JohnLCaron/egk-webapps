@@ -1,26 +1,14 @@
-buildscript {
-    repositories {
-    }
-}
-
-@Suppress("DSL_SCOPE_VIOLATION")
 plugins {
-    kotlin("jvm") version providers.gradleProperty("kotlin_version").get()
+    id("egk.common-conventions")
 }
 
-group = "electionguard.ekglib"
-version = "2.0.0"
+val kotlinVersion = "1.9.10"
+val ktorVersion = "2.3.4"
 
 dependencies {
-    implementation(files("../libs/egklib-jvm-2.0.0-SNAPSHOT.jar"))
-    implementation("io.github.microutils:kotlin-logging:3.0.5")
-    implementation("pro.streem.pbandk:pbandk-runtime:0.14.2")
-    implementation("com.michael-bull.kotlin-result:kotlin-result:1.1.18")
-
-    implementation("org.jetbrains.kotlinx:kotlinx-cli:0.3.6")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
-    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0")
+    implementation("io.ktor:ktor-serialization-kotlinx-json-jvm:${ktorVersion}")
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:${kotlinVersion}")
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5:${kotlinVersion}")
 }
 
 tasks {

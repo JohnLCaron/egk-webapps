@@ -106,4 +106,11 @@ Options:
     electionguard.webapps.decryption.RunRemoteDecryptionKt \
     -in /home/stormy/dev/github/electionguard-kotlin-multiplatform/egklib/testOut/workflow/chainedJson \
     -out testOut/decryption/RunRemoteDecryption
+
+==============================
+
+/usr/lib/jvm/jdk-19/bin/java \
+    -Dfile.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8 \
+    -jar /home/stormy/dev/github/egk-webapps/egklib/build/libs/egklib-all.jar \
+    -in /home/stormy/dev/github/electionguard-kotlin-multiplatform/egklib/testOut/workflow/chainedJson/
     

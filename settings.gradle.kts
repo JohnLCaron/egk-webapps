@@ -1,4 +1,3 @@
-rootProject.name = "egk-webapps"
 
 dependencyResolutionManagement {
     repositories {
@@ -63,7 +62,7 @@ dependencyResolutionManagement {
 
             //// logging
             library("microutils-logging", "io.github.microutils:kotlin-logging:3.0.5")
-            library("logback-classic", "ch.qos.logback:logback-classic:1.3.4")
+            library("logback-classic", "ch.qos.logback:logback-classic:1.4.11")
 
             library("kotlin-server-logging", "io.ktor", "ktor-server-call-logging").versionRef("ktor-version")
             bundle(
@@ -98,7 +97,7 @@ dependencyResolutionManagement {
             //// jvm only
             library("mockk", "io.mockk", "mockk").version("1.13.5")
             library("kotlin-test-junit5", "org.jetbrains.kotlin", "kotlin-test-junit5").versionRef("kotlin-version")
-            library("kotlin-test-junit", "org.jetbrains.kotlin", "kotlin-test-junit").versionRef("kotlin-version")
+            // library("kotlin-test-junit", "org.jetbrains.kotlin", "kotlin-test-junit").versionRef("kotlin-version")
 
             // use ParameterizedTest feature feature
             library("junit-jupiter-params", "org.junit.jupiter:junit-jupiter-params:5.9.3")
@@ -106,11 +105,23 @@ dependencyResolutionManagement {
     }
 }
 
-include ("egklib")
+pluginManagement {
+    // Include 'plugins build' to define convention plugins.
+    includeBuild("build-logic")
+}
+
+plugins {
+    // Apply the foojay-resolver plugin to allow automatic download of JDKs
+    id("org.gradle.toolchains.foojay-resolver-convention") version "0.4.0"
+}
+
+rootProject.name = "egk-webapps"
+
 include ("encryptserver")
 include ("encryptclient")
 include ("keyceremonytrustee")
 include ("keyceremony")
 include ("decryptingtrustee")
 include ("decryption")
+include ("egklib")
 

@@ -19,7 +19,6 @@ import kotlin.test.assertTrue
 class TestRemoteWorkflow {
     val remoteUrl = "http://0.0.0.0:11190"
     val keyceremonyDir =  "/home/snake/tmp/electionguard/RunRemoteKeyCeremonyTest"
-    val trusteeDir =  "${keyceremonyDir}/private_data/trustees"
     private val nballots = 25
     private val nthreads = 25
 
@@ -50,7 +49,7 @@ class TestRemoteWorkflow {
         runAccumulateBallots(group, workingDir, workingDir, "RunWorkflow", "runWorkflowAllAvailable")
 
         // decrypt tally
-        runRemoteDecrypt(group, workingDir, trusteeDir, workingDir, remoteUrl, null, "RunRemoteWorkflowAll")
+        runRemoteDecrypt(group, workingDir, workingDir, remoteUrl, null, "RunRemoteWorkflowAll")
 
         // verify
         println("\nRun Verifier")
@@ -90,7 +89,7 @@ class TestRemoteWorkflow {
         runAccumulateBallots(group, workingDir, workingDir, "RunWorkflow", "RunRemoteWorkflowSome")
 
         // decrypt
-        runRemoteDecrypt(group, workingDir, trusteeDir, workingDir, remoteUrl, "2,4", "RunRemoteWorkflowSome")
+        runRemoteDecrypt(group, workingDir, workingDir, remoteUrl, "2,4", "RunRemoteWorkflowSome")
 
         // verify
         println("\nRun Verifier")
