@@ -1,4 +1,4 @@
-package webapps.electionguard.keyceremony
+package electionguard.webapps.keyceremony
 
 import kotlin.test.Test
 

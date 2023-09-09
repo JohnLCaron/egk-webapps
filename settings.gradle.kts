@@ -1,4 +1,3 @@
-rootProject.name = "egk-webapps"
 
 dependencyResolutionManagement {
     repositories {
@@ -8,15 +7,22 @@ dependencyResolutionManagement {
     versionCatalogs {
         create("libs") {
             version("kotlin-version", providers.gradleProperty("kotlin_version").get())
-            version("coroutines-version", "1.6.4")
-            version("ktor-version", "2.3.3")
+            version("ktor-version", "2.3.4")
+
+            version("cli-version", "0.3.6")
+            version("coroutines-version", "1.7.3")
+            version("datetime-version", "0.4.1")
+            version("logback-version", "1.4.11")
+            version("microutils-version", "3.0.5")
+            version("mockk-version", "1.13.7")
+            version("pbandk-version", "0.14.2")
+            version("result-version", "1.1.18")
 
             plugin("ktor", "io.ktor.plugin").versionRef("ktor-version")
             plugin("serialization", "org.jetbrains.kotlin.plugin.serialization").versionRef("kotlin-version")
-            plugin("formatter", "tech.formatter-kt.formatter").version("0.7.9")
 
-            library("kotlinx-cli", "org.jetbrains.kotlinx:kotlinx-cli:0.3.6")
-            library("kotlinx-datetime", "org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
+            library("kotlinx-cli", "org.jetbrains.kotlinx", "kotlinx-cli").versionRef("cli-version")
+            library("kotlinx-datetime", "org.jetbrains.kotlinx","kotlinx-datetime").versionRef("datetime-version")
             library("kotlinx-coroutines-core", "org.jetbrains.kotlinx", "kotlinx-coroutines-core").versionRef("coroutines-version")
             library("kotlinx-serialization-json", "org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0")
 
@@ -25,14 +31,6 @@ dependencyResolutionManagement {
             library("ktor-client-java", "io.ktor", "ktor-client-java").versionRef("ktor-version")
             library("ktor-client-content-negotiation", "io.ktor", "ktor-client-content-negotiation").versionRef("ktor-version")
             library("ktor-serialization-kotlinx-json", "io.ktor", "ktor-serialization-kotlinx-json").versionRef("ktor-version")
-            bundle(
-                "ktor-client",
-                listOf(
-                    "ktor-client-java",
-                    "ktor-client-content-negotiation",
-                    "ktor-serialization-kotlinx-json",
-                )
-            )
 
             //// ktor server
             library("ktor-server-core-jvm", "io.ktor", "ktor-server-core-jvm").versionRef("ktor-version")
@@ -44,17 +42,6 @@ dependencyResolutionManagement {
                 .versionRef("ktor-version")
             library("ktor-network-tls-certificates", "io.ktor", "ktor-network-tls-certificates")
                 .versionRef("ktor-version")
-            bundle(
-                "ktor-server",
-                listOf(
-                    "ktor-server-core-jvm",
-                    "ktor-server-auth-jvm",
-                    "ktor-server-content-negotiation-jvm",
-                    "ktor-server-netty-jvm",
-                    "ktor-serialization-kotlinx-json-jvm",
-                    "ktor-network-tls-certificates",
-                )
-            )
 
             // depends on kotlin-stdlib-common:1.6.20 -> 1.7.20
             library("kotlin-result", "com.michael-bull.kotlin-result:kotlin-result:1.1.18")
@@ -63,25 +50,11 @@ dependencyResolutionManagement {
 
             //// logging
             library("microutils-logging", "io.github.microutils:kotlin-logging:3.0.5")
-            library("logback-classic", "ch.qos.logback:logback-classic:1.3.4")
+            library("logback-classic", "ch.qos.logback:logback-classic:1.4.11")
 
             library("kotlin-server-logging", "io.ktor", "ktor-server-call-logging").versionRef("ktor-version")
-            bundle(
-                "logging-server",
-                listOf(
-                    "kotlin-server-logging",
-                    "logback-classic",
-                )
-            )
-
             library("kotlin-client-logging", "io.ktor", "ktor-client-logging").versionRef("ktor-version")
-            bundle(
-                "logging-client",
-                listOf(
-                    "kotlin-client-logging",
-                    "logback-classic",
-                )
-            )
+
 
             //// testing
             library("kotlin-test", "org.jetbrains.kotlin", "kotlin-test").versionRef("kotlin-version")
@@ -98,7 +71,7 @@ dependencyResolutionManagement {
             //// jvm only
             library("mockk", "io.mockk", "mockk").version("1.13.5")
             library("kotlin-test-junit5", "org.jetbrains.kotlin", "kotlin-test-junit5").versionRef("kotlin-version")
-            library("kotlin-test-junit", "org.jetbrains.kotlin", "kotlin-test-junit").versionRef("kotlin-version")
+            // library("kotlin-test-junit", "org.jetbrains.kotlin", "kotlin-test-junit").versionRef("kotlin-version")
 
             // use ParameterizedTest feature feature
             library("junit-jupiter-params", "org.junit.jupiter:junit-jupiter-params:5.9.3")
@@ -106,11 +79,23 @@ dependencyResolutionManagement {
     }
 }
 
-include ("egklib")
+pluginManagement {
+    // Include 'plugins build' to define convention plugins.
+    includeBuild("build-logic")
+}
+
+plugins {
+    // Apply the foojay-resolver plugin to allow automatic download of JDKs
+    id("org.gradle.toolchains.foojay-resolver-convention") version "0.4.0"
+}
+
+rootProject.name = "egk-webapps"
+
 include ("encryptserver")
 include ("encryptclient")
 include ("keyceremonytrustee")
 include ("keyceremony")
 include ("decryptingtrustee")
 include ("decryption")
+include ("egklib")
 

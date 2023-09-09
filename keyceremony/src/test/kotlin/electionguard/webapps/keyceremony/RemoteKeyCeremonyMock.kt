@@ -1,4 +1,4 @@
-package webapps.electionguard.keyceremony
+package electionguard.webapps.keyceremony
 
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
@@ -17,11 +17,11 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.serialization.kotlinx.json.*
 import io.mockk.every
 import io.mockk.spyk
-import junit.framework.TestCase.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.text.toByteArray
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 private val remoteUrl = "http://0.0.0.0:11180"
 private val group = productionGroup()

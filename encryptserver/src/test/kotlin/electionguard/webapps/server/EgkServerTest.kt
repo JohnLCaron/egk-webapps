@@ -18,7 +18,7 @@ import electionguard.webapps.server.models.EncryptionService
 import electionguard.webapps.server.plugins.configureRouting
 import electionguard.webapps.server.plugins.configureSerialization
 
-import io.ktor.client.plugins.contentnegotiation.*
+//import io.ktor.client.plugins.contentnegotiation.*
 import kotlinx.serialization.json.*
 
 class EgkServerTest {
@@ -92,9 +92,9 @@ class EgkServerTest {
         }
 
         val myclient = createClient {
-            install(ContentNegotiation) {
-                json()
-            }
+            //install(ContentNegotiation) {
+            //    json()
+            //}
         }
 
         val encryptionService = EncryptionService.getInstance()
