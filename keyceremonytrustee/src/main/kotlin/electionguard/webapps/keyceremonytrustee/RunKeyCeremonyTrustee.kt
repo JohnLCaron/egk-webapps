@@ -68,8 +68,8 @@ fun main(args: Array<String>) {
     println("KeyCeremonyRemoteTrustee\n" +
             "  isSsl = $isSsl\n" +
             "  serverPort = '$sport'\n" +
-            "  trusteeDir = '$trusteeDir'\n" +
-            " ")
+            "  trusteeDir = '$trusteeDir'\n"
+            )
 
     // println("trusteeDir = '$trusteeDir'")
     // io.ktor.server.netty.EngineMain.main(args)
@@ -91,6 +91,8 @@ fun main(args: Array<String>) {
             }
             module(Application::module)
         }
+
+        println("KeyCeremonyRemoteTrustee server ready...")
         embeddedServer(Netty, environment).start(wait = true)
 
     } else {
