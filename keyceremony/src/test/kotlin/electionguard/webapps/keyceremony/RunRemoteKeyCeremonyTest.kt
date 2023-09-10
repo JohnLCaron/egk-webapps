@@ -3,7 +3,8 @@ package electionguard.webapps.keyceremony
 import kotlin.test.Test
 
 class RunRemoteKeyCeremonyTest {
-    private val configDir = "/home/snake/dev/github/electionguard-kotlin-multiplatform/egklib/src/commonTest/data/startConfigProto"
+    private val configDir = "/home/stormy/dev/github/electionguard-kotlin-multiplatform/egklib/src/commonTest/data/startConfigProto"
+    private val outputDir = "../testOut/remoteWorkflow/RunRemoteKeyCeremonyTest"
 
     @Test
     fun testRemoteKeyCeremonyMain() {
@@ -12,15 +13,11 @@ class RunRemoteKeyCeremonyTest {
                 "-in",
                 configDir,
                 "-out",
-                "/home/snake/tmp/electionguard/RunRemoteKeyCeremonyTest",
-                "-remoteUrl",
-                "https://localhost:11183",
-                "-keystore",
-                "../keystore.jks",
-                "-kpwd",
-                "ksPassword",
-                "-epwd",
-                "egPassword",
+                outputDir,
+                "-remoteUrl", "http://localhost:11183/egk",
+                "-keystore", "../keystore.jks",
+                "-kpwd", "ksPassword",
+                "-epwd", "egPassword",
             )
         )
     }

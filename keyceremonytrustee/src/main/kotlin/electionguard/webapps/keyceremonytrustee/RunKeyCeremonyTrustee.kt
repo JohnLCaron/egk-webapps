@@ -24,6 +24,16 @@ val groupContext = productionGroup(PowRadixOption.HIGH_MEMORY_USE, ProductionMod
 
 fun main(args: Array<String>) {
     val parser = ArgParser("RunKeyCeremonyTrustee")
+    val trustees by parser.option(
+        ArgType.String,
+        shortName = "trusteeDir",
+        description = "Directory to write output trustee record (must be private))"
+    ).required()
+    val serverPort by parser.option(
+        ArgType.Int,
+        shortName = "port",
+        description = "listen on this port, default = 11183"
+    )
     val sslKeyStore by parser.option(
         ArgType.String,
         shortName = "keystore",
@@ -39,22 +49,13 @@ fun main(args: Array<String>) {
         shortName = "epwd",
         description = "password for the electionguard entry"
     )
-    val trustees by parser.option(
-        ArgType.String,
-        shortName = "trusteeDir",
-        description = "trustee output directory"
-    ).required()
-    val serverPort by parser.option(
-        ArgType.Int,
-        shortName = "port",
-        description = "listen on this port, default = 11183"
-    )
     parser.parse(args)
 
     val sport = serverPort ?: 11183
     trusteeDir = trustees
 
     val isSsl = false // (sslKeyStore != null) && (keystorePassword != null) && (electionguardPassword != null)
+    var keystore = ""
 
     /*
     if (isSsl) {
@@ -62,20 +63,20 @@ fun main(args: Array<String>) {
         ksPassword = keystorePassword
         egPassword = electionguardPassword
         credentialsPassword = electionguardPassword
-   }
+  }
      */
 
     println("KeyCeremonyRemoteTrustee\n" +
             "  isSsl = $isSsl\n" +
             "  serverPort = '$sport'\n" +
-            "  trusteeDir = '$trusteeDir'\n"
+            "  trusteeDir = '$trusteeDir'"
             )
 
     // println("trusteeDir = '$trusteeDir'")
     // io.ktor.server.netty.EngineMain.main(args)
 
     if (isSsl) {
-        val keyStoreFile = File(sslKeyStore)
+        val keyStoreFile = File(keystore)
         val keyStore: KeyStore = KeyStore.getInstance(KeyStore.getDefaultType()) // LOOK assumes jks
         keyStore.load(FileInputStream(keyStoreFile), keystorePassword!!.toCharArray())
 
@@ -96,6 +97,7 @@ fun main(args: Array<String>) {
         embeddedServer(Netty, environment).start(wait = true)
 
     } else {
+        println("KeyCeremonyRemoteTrustee server (no SSL) ready...")
         embeddedServer(Netty, port = sport, host = "localhost", module = Application::module)
             .start(wait = true)
     }
@@ -112,7 +114,7 @@ fun Application.module() {
             "Status: $status, HTTP method: $httpMethod, Path: $path"
         }
     }
-    configureSecurity(credentialsPassword)
+    // configureSecurity(credentialsPassword)
     configureSerialization()
     configureAdministration()
     configureRouting()

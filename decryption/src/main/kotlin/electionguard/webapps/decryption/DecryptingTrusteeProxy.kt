@@ -1,6 +1,8 @@
 package electionguard.webapps.decryption
 
+import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
+import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.unwrap
 import com.github.michaelbull.result.unwrapError
 import electionguard.core.ElementModP
@@ -20,18 +22,29 @@ import kotlinx.coroutines.runBlocking
 
 /** Implement DecryptingTrusteeIF by connecting to a decryptingtrustee webapp. */
 class DecryptingTrusteeProxy(
+    val group: GroupContext,
     val client: HttpClient,
     val remoteURL: String,
     val id: String,
     val xcoord: Int,
     val publicKey: ElementModP,
 ) : DecryptingTrusteeIF {
+    var initError : String? = null
 
     init {
         runBlocking {
             val url = "$remoteURL/dtrustee/create/$id"
             val response: HttpResponse = client.get(url)
-            println("DecryptingTrusteeProxy create $id = ${response.status}")
+            if (response.status == HttpStatusCode.BadRequest) {
+                initError = "DecryptingTrusteeProxy create $id == ${response.status}"
+            } else {
+                val publicKeyJson: ElementModPJson = response.body()
+                val remotePublicKey = publicKeyJson.import(group)
+                if (remotePublicKey != publicKey) {
+                    initError = "DecryptingTrustee $id publicKey does not match election record"
+                }
+            }
+            println("DecryptingTrusteeProxy create ${if (initError == null) "OK" else "FAIL"}")
         }
     }
 
@@ -86,11 +99,25 @@ class DecryptingTrusteeProxy(
         return xcoord
     }
 
-    override fun electionPublicKey(): ElementModP {
+    override fun guardianPublicKey(): ElementModP {
         return publicKey
     }
 
     override fun id(): String {
         return id
+    }
+
+    companion object {
+        fun create(
+            group: GroupContext,
+            client: HttpClient,
+            remoteURL: String,
+            id: String,
+            xcoord: Int,
+            publicKey: ElementModP,
+        ): Result<DecryptingTrusteeIF, String> {
+            val proxy = DecryptingTrusteeProxy(group, client, remoteURL, id, xcoord, publicKey)
+            return if (proxy.initError == null) Ok(proxy) else Err(proxy.initError!!)
+        }
     }
 }

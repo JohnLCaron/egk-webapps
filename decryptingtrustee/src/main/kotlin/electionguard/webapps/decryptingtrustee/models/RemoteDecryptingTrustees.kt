@@ -11,8 +11,6 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import mu.KotlinLogging
 
-private val logger = KotlinLogging.logger("DecryptingTrusteeJson")
-
 @Serializable
 data class RemoteDecryptingTrusteeJson(val guardian_id: String) {
     @Transient
@@ -20,17 +18,13 @@ data class RemoteDecryptingTrusteeJson(val guardian_id: String) {
 
     fun id() = guardian_id
     fun xCoordinate() = delegate.xCoordinate()
+    fun publicKey() = delegate.guardianPublicKey()
 
     fun decrypt(texts: List<ElementModP>) = delegate.decrypt(groupContext, texts)
     fun challenge(challenges: List<ChallengeRequest>) = delegate.challenge(groupContext, challenges)
 }
 
 fun readState(group: GroupContext, guardianId: String) : DecryptingTrusteeIF {
-    val consumer = makeConsumer(trusteeDir, group, true) // TODO detect JSON
-    try {
-        return consumer.readTrustee(trusteeDir, guardianId)
-    } catch (t: Throwable) {
-        logger.atError().setCause(t).log(" readState failed ${t.message}")
-        throw RuntimeException(t)
-    }
+    val consumer = makeConsumer(trusteeDir, group, true)
+    return consumer.readTrustee(trusteeDir, guardianId)
 }

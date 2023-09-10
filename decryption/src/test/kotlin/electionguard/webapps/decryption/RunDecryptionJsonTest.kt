@@ -1,43 +1,36 @@
 package electionguard.webapps.decryption
 
 import kotlin.test.Test
+import kotlin.test.assertTrue
 
 /** Test Decryption with in-process DecryptingTrustee's. */
 class RunDecryptionJsonTest {
-    val remoteUrl = "http://0.0.0.0:11190"
+    val remoteUrl = "http://0.0.0.0:11190/egk"
 
     @Test
     fun testDecryptionAll() {
-        val inputDir = "/home/snake/tmp/electionguard/RunKeyCeremonyTest"
-        val trusteeDir = "$inputDir/private_data/trustees"
+        val inputDir = "/home/stormy/dev/github/electionguard-kotlin-multiplatform/egklib/src/commonTest/data/workflow/allAvailableJson/"
         main(
             arrayOf(
                 "-in",
                 inputDir,
-                "-trustees",
-                trusteeDir,
                 "-out",
-                "/home/snake/tmp/electionguard/RunRemoteDecryptionJsonTest",
+                "../testOut/remoteWorkflow/testDecryptionAll",
                 "-createdBy",
                 "RunDecryptionJsonTest",
-                "-remoteUrl",
-                remoteUrl,
             )
         )
     }
 
     @Test
     fun testDecryptionSome() {
-        val inputDir = "/home/snake/tmp/electionguard/RunKeyCeremonyTest"
-        val trusteeDir = "$inputDir/private_data/trustees"
+        val inputDir = "/home/stormy/dev/github/electionguard-kotlin-multiplatform/egklib/src/commonTest/data/workflow/someAvailableJson/"
         main(
             arrayOf(
                 "-in",
                 inputDir,
-                "-trustees",
-                trusteeDir,
                 "-out",
-                "/home/snake/tmp/electionguard/RunRemoteDecryptionJsonTest",
+                "../testOut/remoteWorkflow/testDecryptionSome",
                 "-createdBy",
                 "RunDecryptionJsonTest",
                 "-remoteUrl",
