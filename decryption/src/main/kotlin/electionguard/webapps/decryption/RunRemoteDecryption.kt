@@ -1,11 +1,15 @@
 package electionguard.webapps.decryption
 
+import com.github.michaelbull.result.Err
+import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.getOrThrow
+import com.github.michaelbull.result.partition
 import electionguard.ballot.*
 import electionguard.core.GroupContext
 import electionguard.core.getSystemDate
 import electionguard.core.getSystemTimeInMillis
 import electionguard.core.productionGroup
+import electionguard.decrypt.DecryptingTrusteeIF
 import electionguard.decrypt.DecryptorDoerre
 import electionguard.decrypt.Guardians
 import electionguard.publish.makeConsumer
@@ -99,13 +103,14 @@ fun main(args: Array<String>) {
      */
 
     val group = productionGroup()
-    runRemoteDecrypt(
+    val success = runRemoteDecrypt(
         group,
         inputDir,
         outputDir,
         remoteUrl,
         missing,
         createdBy)
+    println("success = $success")
 }
 
 fun runRemoteDecrypt(
@@ -115,7 +120,7 @@ fun runRemoteDecrypt(
     remoteUrl: String,
     missing: String?,
     createdBy: String?
-) {
+): Boolean {
     val starting = getSystemTimeInMillis()
 
     val consumerIn = makeConsumer(inputDir, group)
@@ -145,8 +150,14 @@ fun runRemoteDecrypt(
     }
     reset(client, remoteUrl)
 
-    val trustees = presentGuardians.map {
-        DecryptingTrusteeProxy(client, remoteUrl, it.guardianId, it.xCoordinate, it.publicKey())
+    // public fun <V, E> Iterable<Result<V, E>>.partition(): Pair<List<V>, List<E>> {
+    val trusteeResults : List<Result<DecryptingTrusteeIF, String>> = presentGuardians.map {
+        DecryptingTrusteeProxy.create(group, client, remoteUrl, it.guardianId, it.xCoordinate, it.publicKey())
+    }
+    val (trustees, errors) = trusteeResults.partition()
+    if (errors.isNotEmpty()) {
+        println("FAIL runRemoteDecrypt creating trustees: ${errors.joinToString("\n ")}")
+        return false
     }
 
     val guardians = Guardians(group, tallyResult.electionInitialized.guardians)
@@ -172,6 +183,7 @@ fun runRemoteDecrypt(
 
     val took = getSystemTimeInMillis() - starting
     println("runRemoteDecrypt took $took millisecs")
+    return true
 }
 
 fun reset(client : HttpClient, remoteUrl : String) {

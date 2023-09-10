@@ -4,8 +4,6 @@ import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.getOrThrow
 import com.github.michaelbull.result.unwrap
 import electionguard.ballot.ElectionConfig
-import electionguard.ballot.makeElectionConfig
-import electionguard.ballot.protocolVersion
 import electionguard.core.GroupContext
 import electionguard.core.getSystemTimeInMillis
 import electionguard.core.productionGroup
@@ -43,21 +41,6 @@ fun main(args: Array<String>) {
         shortName = "in",
         description = "Directory containing input ElectionConfig record"
     )
-    val electionManifest by parser.option(
-        ArgType.String,
-        shortName = "manifest",
-        description = "Manifest file or directory (json or protobuf)"
-    )
-    val nguardians by parser.option(
-        ArgType.Int,
-        shortName = "nguardians",
-        description = "number of guardians"
-    )
-    val quorum by parser.option(
-        ArgType.Int,
-        shortName = "quorum",
-        description = "quorum size"
-    )
     val outputDir by parser.option(
         ArgType.String,
         shortName = "out",
@@ -68,24 +51,22 @@ fun main(args: Array<String>) {
         shortName = "remoteUrl",
         description = "URL of keyceremony trustee webapp "
     ).default("http://localhost:11183/egk")
-    /*
     val sslKeyStore by parser.option(
         ArgType.String,
         shortName = "keystore",
         description = "file path of the keystore file"
-    ).required()
+    )
     val keystorePassword by parser.option(
         ArgType.String,
         shortName = "kpwd",
         description = "password for the entire keystore"
-    ).required()
+    )
     val electionguardPassword by parser.option(
         ArgType.String,
         shortName = "epwd",
         description = "password for the electionguard entry"
-    ).required()
+    )
 
-     */
     val createdBy by parser.option(
         ArgType.String,
         shortName = "createdBy",
@@ -106,48 +87,17 @@ fun main(args: Array<String>) {
     val group = productionGroup()
     var createdFrom : String
 
-    val config: ElectionConfig = if (electionManifest != null && nguardians != null && quorum != null) {
-        // val manifest = readManifest(electionManifest!!, group)
-        createdFrom = electionManifest!!
-        println(
-            "RunRemoteKeyCeremony\n" +
-                    "  electionManifest = '$electionManifest'\n" +
-                    "  nguardians = $nguardians quorum = $quorum\n" +
-                    "  outputDir = '$outputDir'\n" +
-                    "  isSsl = $isSsl\n"
-        )
-        // fun makeElectionConfig(
-        //    configVersion: String,
-        //    constants: ElectionConstants,
-        //    numberOfGuardians: Int,
-        //    quorum: Int,
-        //    manifestBytes: ByteArray,
-        //    chainConfirmationCodes: Boolean,
-        //    baux0: ByteArray, // B_aux,0 from eq 59,60
-        //    metadata: Map<String, String> = emptyMap(),
-        //): ElectionConfig {
-        makeElectionConfig(protocolVersion, group.constants, nguardians!!, quorum!!,
-            ByteArray(0), // TODO manifest
-            false, // TODO chainConfirmationCodes
-            ByteArray(0), // TODO baux0
-            mapOf(
-                Pair("CreatedBy", createdBy ?: "RunRemoteKeyCeremony"),
-                Pair("CreatedFromElectionManifest", electionManifest!!),
-            ),
-        )
-    } else {
-        val consumerIn = makeConsumer(inputDir!!, group)
-        createdFrom = inputDir!!
-        println(
-            "RunRemoteKeyCeremony\n" +
-                    "  inputDir = '$inputDir'\n" +
-                    "  outputDir = '$outputDir'\n" +
-                    "  isSsl = $isSsl\n"
-        )
-        consumerIn.readElectionConfig().getOrThrow { IllegalStateException(it) }
-    }
+    val consumerIn = makeConsumer(inputDir!!, group)
+    createdFrom = inputDir!!
+    println(
+        "RunRemoteKeyCeremony\n" +
+                "  inputDir = '$inputDir'\n" +
+                "  outputDir = '$outputDir'\n" +
+                "  isSsl = $isSsl\n"
+    )
+    val config = consumerIn.readElectionConfig().getOrThrow { IllegalStateException(it) }
 
-    runKeyCeremony(group, remoteUrl, createdFrom, config, outputDir, createdBy)
+    runKeyCeremony(group, remoteUrl, createdFrom, config, outputDir, consumerIn.isJson(), createdBy)
 }
 
 fun runKeyCeremony(
@@ -156,7 +106,8 @@ fun runKeyCeremony(
     createdFrom: String,
     config: ElectionConfig,
     outputDir: String,
-    createdBy: String?
+    isJson : Boolean,
+    createdBy: String?,
 ): Boolean {
     val starting = getSystemTimeInMillis()
 
@@ -200,11 +151,12 @@ fun runKeyCeremony(
         )
     )
 
-    val publisher = makePublisher(outputDir)
+    val publisher = makePublisher(outputDir, false, isJson)
     publisher.writeElectionInitialized(electionInitialized)
+    println("writeElectionInitialized to $outputDir")
 
     // tell the trustees to save their state in some private place.
-    trustees.forEach { it.saveState() }
+    trustees.forEach { it.saveState(isJson) }
     client.close()
 
     val took = getSystemTimeInMillis() - starting

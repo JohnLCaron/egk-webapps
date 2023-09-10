@@ -53,7 +53,6 @@ fun main(args: Array<String>) {
         shortName = "nballots",
         description = "Number of test ballots to send to server"
     ).default(11)
-    /*
     val sslKeyStore by parser.option(
         ArgType.String,
         shortName = "keystore",
@@ -69,7 +68,6 @@ fun main(args: Array<String>) {
         shortName = "epwd",
         description = "password for the electionguard entry"
     )
-     */
     parser.parse(args)
 
     val isSsl = false // (sslKeyStore != null) && (keystorePassword != null) && (electionguardPassword != null)

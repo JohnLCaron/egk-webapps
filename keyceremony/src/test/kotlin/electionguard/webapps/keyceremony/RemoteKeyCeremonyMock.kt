@@ -23,7 +23,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-private val remoteUrl = "http://0.0.0.0:11180"
+private val remoteUrl = "http://0.0.0.0:11183/egk"
 private val group = productionGroup()
 
 // Overrides some of the RemoteKeyTrustee responses in order to test keyCeremonyExchange.
@@ -55,6 +55,7 @@ class RemoteKeyCeremonyMock() {
 
         listOf(trustee1, trustee2, spy3).forEach {
             assertNotNull(it.keyShare())
+            it.saveState(true)
         }
     }
 

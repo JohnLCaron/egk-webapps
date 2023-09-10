@@ -11,6 +11,7 @@ import io.ktor.server.netty.*
 import io.ktor.server.request.*
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
+import kotlinx.cli.default
 import kotlinx.cli.required
 import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
@@ -24,6 +25,16 @@ var credentialsPassword = ""
 
 fun main(args: Array<String>) {
     val parser = ArgParser("RunDecryptingTrustee")
+    val trustees by parser.option(
+        ArgType.String,
+        shortName = "trusteeDir",
+        description = "trustee output directory"
+    ).required()
+    val serverPort by parser.option(
+        ArgType.Int,
+        shortName = "port",
+        description = "listen on this port, default = 11190"
+    ).default(11190)
     val sslKeyStore by parser.option(
         ArgType.String,
         shortName = "keystore",
@@ -39,19 +50,8 @@ fun main(args: Array<String>) {
         shortName = "epwd",
         description = "password for the electionguard entry"
     )
-    val trustees by parser.option(
-        ArgType.String,
-        shortName = "trusteeDir",
-        description = "trustee output directory"
-    ).required()
-    val serverPort by parser.option(
-        ArgType.Int,
-        shortName = "port",
-        description = "listen on this port, default = 11190"
-    )
     parser.parse(args)
 
-    val sport = serverPort ?: 11190
     trusteeDir = trustees
 
     val isSsl = false // (sslKeyStore != null) && (keystorePassword != null) && (electionguardPassword != null)
@@ -67,12 +67,9 @@ fun main(args: Array<String>) {
 
     println("RunDecryptingTrustee\n" +
             "  isSsl = $isSsl\n" +
-            "  serverPort = '$sport'\n" +
+            "  serverPort = '$serverPort'\n" +
             "  trusteeDir = '$trusteeDir'\n" +
             " ")
-
-    // println("trusteeDir = '$trusteeDir'")
-    // io.ktor.server.netty.EngineMain.main(args)
 
     if (isSsl) {
         val keyStoreFile = File(sslKeyStore)
@@ -86,7 +83,7 @@ fun main(args: Array<String>) {
                 keyAlias = "electionguard",
                 keyStorePassword = { keystorePassword!!.toCharArray() },
                 privateKeyPassword = { electionguardPassword!!.toCharArray() }) {
-                port = sport
+                port = serverPort
                 keyStorePath = keyStoreFile
             }
             module(Application::module)
@@ -96,13 +93,10 @@ fun main(args: Array<String>) {
         embeddedServer(Netty, environment).start(wait = true)
 
     } else {
-        embeddedServer(Netty, port = sport, host = "localhost", module = Application::module)
+        println("RunDecryptingTrustee server (no SSL) ready...")
+        embeddedServer(Netty, port = serverPort, host = "localhost", module = Application::module)
             .start(wait = true)
     }
-}
-
-fun main2(args: Array<String>) {
-    io.ktor.server.netty.EngineMain.main(args)
 }
 
 @Suppress("unused") // application.conf references the main function. This annotation prevents the IDE from marking it as unused.

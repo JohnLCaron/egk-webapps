@@ -38,7 +38,7 @@ class RemoteKeyTrusteeProxy(
             val response: HttpResponse = client.post(url) {
                 headers {
                     append(HttpHeaders.ContentType, "application/json")
-                    basicAuth("electionguard", certPassword)
+                    //basicAuth("electionguard", certPassword)
                 }
                 setBody(
                     """{
@@ -61,7 +61,7 @@ class RemoteKeyTrusteeProxy(
             val response: HttpResponse = client.get(url) {
                 headers {
                     append(HttpHeaders.Accept, "application/json")
-                    basicAuth("electionguard", certPassword)
+                    //basicAuth("electionguard", certPassword)
                 }
             }
             if (response.status != HttpStatusCode.OK) {
@@ -90,7 +90,7 @@ class RemoteKeyTrusteeProxy(
             val response: HttpResponse = client.post(url) {
                 headers {
                     append(HttpHeaders.ContentType, "application/json")
-                    basicAuth("electionguard", certPassword)
+                    //basicAuth("electionguard", certPassword)
                 }
                 setBody(publicKeys.publishJson())
             }
@@ -105,7 +105,7 @@ class RemoteKeyTrusteeProxy(
             val response: HttpResponse = client.get(url) {
                 headers {
                     append(HttpHeaders.Accept, "application/json")
-                    basicAuth("electionguard", certPassword)
+                    //basicAuth("electionguard", certPassword)
                 }
             }
             if (response.status != HttpStatusCode.OK) {
@@ -129,7 +129,7 @@ class RemoteKeyTrusteeProxy(
             val response: HttpResponse = client.post(url) {
                 headers {
                     append(HttpHeaders.ContentType, "application/json")
-                    basicAuth("electionguard", certPassword)
+                    //basicAuth("electionguard", certPassword)
                 }
                 setBody(share.publishJson())
             }
@@ -144,7 +144,7 @@ class RemoteKeyTrusteeProxy(
             val response: HttpResponse = client.get(url) {
                 headers {
                     append(HttpHeaders.Accept, "application/json")
-                    basicAuth("electionguard", certPassword)
+                    //basicAuth("electionguard", certPassword)
                 }
             }
             if (response.status != HttpStatusCode.OK) {
@@ -165,7 +165,7 @@ class RemoteKeyTrusteeProxy(
             val response: HttpResponse = client.post(url) {
                 headers {
                     append(HttpHeaders.ContentType, "application/json")
-                    basicAuth("electionguard", certPassword)
+                    //basicAuth("electionguard", certPassword)
                 }
                 setBody(keyShare.publishJson())
             }
@@ -174,15 +174,15 @@ class RemoteKeyTrusteeProxy(
         }
     }
 
-    fun saveState(): Result<Boolean, String> {
+    fun saveState(isJson : Boolean): Result<Boolean, String> {
         return runBlocking {
-            val url = "$remoteURL/ktrustee/$xcoord/saveState"
+            val url = "$remoteURL/ktrustee/$xcoord/saveState/$isJson"
             val response: HttpResponse = client.get(url) {
                 headers {
-                    basicAuth("electionguard", certPassword)
+                    //basicAuth("electionguard", certPassword)
                 }
             }
-            println("$id saveState from = ${response.status}")
+            println("$id saveState isJson=$isJson status=${response.status}")
             if (response.status == HttpStatusCode.OK) Ok(true) else Err(response.toString())
         }
     }
@@ -211,7 +211,7 @@ class RemoteKeyTrusteeProxy(
             val url = "$remoteURL/ktrustee/$xcoord/keyShare"
             val response: HttpResponse = client.get(url) {
                 headers {
-                    basicAuth("electionguard", certPassword)
+                    //basicAuth("electionguard", certPassword)
                 }
             }
             println("$id keyShare ${xcoord} = ${response.status}")

@@ -7,13 +7,13 @@ import io.ktor.client.statement.*
 import kotlin.test.*
 import io.ktor.server.testing.*
 
-class ApplicationTest {
+class RunKeyCeremonyTrusteeTest {
     @Test
     fun testRoot() = testApplication {
         application {
             configureRouting()
         }
-        client.get("/ktrustee").apply {
+        client.get("/egk/ktrustee").apply {
             assertEquals(HttpStatusCode.OK, status)
             assertEquals("No guardians found", bodyAsText())
         }

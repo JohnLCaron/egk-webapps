@@ -1,4 +1,4 @@
-package webapps.electionguard
+package electionguard.webapps.keystore
 
 import io.ktor.network.tls.certificates.*
 import io.ktor.network.tls.extensions.*

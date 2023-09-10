@@ -20,7 +20,7 @@ import io.ktor.server.routing.*
 fun Route.trusteeRouting() {
     route("/egk/ktrustee") {
         // https://ktor.io/docs/basic.html
-        authenticate("auth-basic") {
+//        authenticate("auth-basic") {
             get {
                 if (remoteKeyTrustees.isNotEmpty()) {
                     call.respond(remoteKeyTrustees)
@@ -32,7 +32,7 @@ fun Route.trusteeRouting() {
             post {
                 val rguardian = call.receive<RemoteKeyTrustee>()
                 remoteKeyTrustees.add(rguardian)
-                call.respondText("RemoteKeyTrustee ${rguardian.id} stored correctly", status = HttpStatusCode.Created)
+                call.respondText("RemoteKeyTrustee ${rguardian.id} created", status = HttpStatusCode.Created)
             }
 
             get("{id?}/publicKeys") {
@@ -198,7 +198,7 @@ fun Route.trusteeRouting() {
                 }
             }
 
-            get("{id?}/saveState") {
+            get("{id?}/saveState/{isJson?}") {
                 val id = call.parameters["id"] ?: return@get call.respondText(
                     "Missing id",
                     status = HttpStatusCode.BadRequest
@@ -208,7 +208,9 @@ fun Route.trusteeRouting() {
                         "No RemoteKeyTrustee with xCoordinate $id",
                         status = HttpStatusCode.NotFound
                     )
-                val result = rguardian.saveState(trusteeDir)
+                val isJsonS = call.parameters["isJson"] ?: "true"
+                val isJson = isJsonS == "true"
+                val result = rguardian.saveState(trusteeDir, isJson)
                 if (result is Ok) {
                     call.respondText(
                         "RemoteKeyTrustee ${rguardian.id} saveState succeeded",
@@ -236,5 +238,5 @@ fun Route.trusteeRouting() {
                 call.respond(result.publishJson())
             }
         }
-    }
+//    }
 }
