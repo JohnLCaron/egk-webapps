@@ -91,6 +91,8 @@ fun main(args: Array<String>) {
             }
             module(Application::module)
         }
+
+        println("RunDecryptingTrustee server ready...")
         embeddedServer(Netty, environment).start(wait = true)
 
     } else {
