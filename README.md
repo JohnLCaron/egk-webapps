@@ -1,6 +1,6 @@
 # ElectionGuard-Kotlin-Multiplatform Webapps
 
-_last update 9/10/2023_
+_last update 9/11/2023_
 
 [ElectionGuard-Kotlin-Multiplatform (EKM)](https://github.com/danwallach/electionguard-kotlin-multiplatform) 
 is a multiplatform Kotlin implementation of 
@@ -61,8 +61,8 @@ to its own **_secret key_**, by having each trustee run their own program on the
 their secret key on their own computer. In this way, neither the election administrator nor any of the other trustees 
 has any kind of access to the secret key. 
 
-Heres a diagram of the general way that works, where the separate boxes represent separate processes on separate 
-computers. The processes communicate remotely, so this is called a **_Remote Workflow_**:
+Heres a diagram of the general way that works, where the separate boxes represent separate processes on (possibly) 
+separate computers. The processes communicate remotely, so this is called a **_Remote Workflow_**:
 
 <img src="./docs/images/RemoteProcesses.svg" alt="RemoteProcesses" width="1200"/>
 
@@ -93,12 +93,11 @@ _(For debugging purposes, currently all the trustees are handled by a single Key
 soon add the "each trustee in its own process" production workflow)_
 
 ````
-Value for option --trustees should be always provided in command line.
 Usage: RunKeyCeremonyTrustee options_list
 Options: 
     --trustees, -trusteeDir -> Directory to write output trustee record (must be private)) (always required) { String }
-    --serverPort, -port -> listen on this port, default = 11183 { Int }
-    --sslKeyStore, -keystore -> file path of the keystore file { String }
+    --serverPort, -port [11183] -> listen on this port, default = 11183 { Int }
+    --sslKeyStore, -keystore [egKeystore.jks] -> file path of the keystore file { String }
     --keystorePassword, -kpwd -> password for the entire keystore { String }
     --electionguardPassword, -epwd -> password for the electionguard entry { String }
     --help, -h -> Usage info 
@@ -125,6 +124,17 @@ KeyCeremonyRemoteTrustee
 KeyCeremonyRemoteTrustee server ready...
 ````
 
+To use SSL (see [Using SSL](#using-ssl)):
+
+````
+/usr/lib/jvm/jdk-19/bin/java \
+    -classpath keyceremonytrustee/build/libs/keyceremonytrustee-all.jar \
+    electionguard.webapps.keyceremonytrustee.RunKeyCeremonyTrusteeKt \
+    -trusteeDir testOut/remoteWorkflow/keyceremony/trustees \
+    --keystorePassword $EG_KEYSTORE_PASSWORD \
+    --electionguardPassword $ELECTIONGUARD_SSL_PASSWORD
+````
+
 ### The keyceremony program
 
 Start up the keyceremonytrustee program first. Then:
@@ -141,8 +151,6 @@ Options:
     --createdBy, -createdBy -> who created for ElectionInitialized metadata { String }
     --help, -h -> Usage info 
 ````
-
-To use SSL, see [Using SSL](#using-ssl)
 
 Example:
 
@@ -191,6 +199,17 @@ RunTrustedKeyCeremony took 17260 millisecs
 
 You can check that the Election Configuration file was written to the outputDir. 
 
+To use SSL (see [Using SSL](#using-ssl)):
+
+````
+/usr/lib/jvm/jdk-19/bin/java \
+  -classpath keyceremony/build/libs/keyceremony-all.jar \
+  electionguard.webapps.keyceremony.RunRemoteKeyCeremonyKt \
+  --inputDir /home/stormy/dev/github/electionguard-kotlin-multiplatform/testOut/cliWorkflow/electionRecord \
+  --outputDir testOut/remoteWorkflow/keyceremony \
+  --keystorePassword $EG_KEYSTORE_PASSWORD \
+  --electionguardPassword $ELECTIONGUARD_SSL_PASSWORD
+````
 
 ## Remote Decryption
 
@@ -211,14 +230,11 @@ Usage: RunDecryptingTrustee options_list
 Options: 
     --trustees, -trusteeDir -> trustee output directory (always required) { String }
     --serverPort, -port [11190] -> listen on this port, default = 11190 { Int }
-    --sslKeyStore, -keystore -> file path of the keystore file { String }
+    --sslKeyStore, -keystore [egKeystore.jks] -> file path of the keystore file { String }
     --keystorePassword, -kpwd -> password for the entire keystore { String }
     --electionguardPassword, -epwd -> password for the electionguard entry { String }
     --help, -h -> Usage info 
 ````
-
-To use SSL, see [Using SSL](#using-ssl)
-
 Example:
 
 ````
@@ -244,6 +260,17 @@ RunDecryptingTrustee server (no SSL) ready...
 
 ````
 
+To use SSL in decryptingtrustee (see [Using SSL](#using-ssl)):
+
+````
+/usr/lib/jvm/jdk-19/bin/java \
+  -classpath decryptingtrustee/build/libs/decryptingtrustee-all.jar \
+  electionguard.webapps.decryptingtrustee.RunDecryptingTrusteeKt \
+  -trusteeDir /home/stormy/dev/github/electionguard-kotlin-multiplatform/egklib/src/commonTest/data/workflow/allAvailableJson/private_data/trustees \
+  --keystorePassword $EG_KEYSTORE_PASSWORD \
+  --electionguardPassword $ELECTIONGUARD_SSL_PASSWORD
+````
+
 ### The decryption program
 
 Start up the decryptingtrustee program first. Then:
@@ -253,13 +280,15 @@ Usage: RunRemoteDecryption options_list
 Options: 
     --inputDir, -in -> Directory containing input election record (always required) { String }
     --outputDir, -out -> Directory to write output election record (always required) { String }
-    --remoteUrl, -remoteUrl [http://localhost:11190/egk] -> URL of decrypting trustee app  { String }
+    --serverHost, -trusteeHost [localhost] -> hostname of decrypting trustee webapp  { String }
+    --serverPort, -serverPort [11190] -> port of decrypting trustee webapp  { Int }
     --createdBy, -createdBy -> who created { String }
     --missing, -missing -> missing guardians' xcoord, comma separated, eg '2,4' { String }
-    --help, -h -> Usage info 
+    --sslKeyStore, -keystore [egKeystore.jks] -> file path of the keystore file { String }
+    --keystorePassword, -kpwd -> password for the entire keystore { String }
+    --electionguardPassword, -epwd -> password for the electionguard entry { String }
+    --help, -h -> Usage info
 ````
-
-To use SSL, see [Using SSL](#using-ssl)
 
 Example:
 
@@ -316,6 +345,17 @@ RemoteDecryptingTrustee guardian3 challenge
 
 You can check that the Decrypted tally file was written to the outputDir.
 
+To use SSL in decryption (see [Using SSL](#using-ssl)):
+
+````
+/usr/lib/jvm/jdk-19/bin/java \
+  -classpath decryption/build/libs/decryption-all.jar \
+  electionguard.webapps.decryption.RunRemoteDecryptionKt \
+  --inputDir /home/stormy/dev/github/electionguard-kotlin-multiplatform/egklib/src/commonTest/data/workflow/allAvailableJson \
+  --outputDir testOut/remoteWorkflow/RunRemoteDecryption \
+  --keystorePassword $EG_KEYSTORE_PASSWORD \
+  --electionguardPassword $ELECTIONGUARD_SSL_PASSWORD
+````
 
 ## Remote Encryption
 
@@ -339,8 +379,6 @@ Options:
     --help, -h -> Usage info 
 ````
 
-To use SSL, see [Using SSL](#using-ssl)
-
 Example:
 
 ````
@@ -349,6 +387,18 @@ Example:
   electionguard.webapps.server.RunEgkServerKt \
   --inputDir testInput/unchained \
   --outputDir testOut/encrypt/RunEgkServer
+````
+
+To use SSL in encryption server (see [Using SSL](#using-ssl)):
+
+````
+/usr/lib/jvm/jdk-19/bin/java \
+  -classpath encryptserver/build/libs/encryptserver-all.jar \
+  electionguard.webapps.server.RunEgkServerKt \
+  --inputDir testInput/unchained \
+  --outputDir testOut/encrypt/RunEgkServer \
+  --keystorePassword $EG_KEYSTORE_PASSWORD \
+  --electionguardPassword $ELECTIONGUARD_SSL_PASSWORD
 ````
 
 ### Encryption Client
@@ -371,8 +421,6 @@ Options:
     --help, -h -> Usage info 
 ````
 
-To use SSL, see [Using SSL](#using-ssl)
-
 Example:
 
 ````
@@ -383,24 +431,47 @@ Example:
   --outputDir testOut/encrypt/RunEgkServer
 ````
 
+To use SSL in the encryption client (see [Using SSL](#using-ssl)):
+
+````
+/usr/lib/jvm/jdk-19/bin/java \
+  -classpath encryptclient/build/libs/encryptclient-all.jar \
+  electionguard.webapps.client.RunEgkClientKt \
+  --inputDir testInput/unchained \
+  --outputDir testOut/encrypt/RunEgkServer \
+  --keystorePassword $EG_KEYSTORE_PASSWORD \
+  --electionguardPassword $ELECTIONGUARD_SSL_PASSWORD
+````
 
 ## Using SSL
 
-_(SSL is not yet implemented)_
+SSL is enabled by specifying both _--keystorePassword_ and _--electionguardPassword_ on the command line.
+These are specified when you create the keystore, and must match those.
+
+You must use SSL (or not) on both the server and the client. However, each server/client pair
+(keyceremony, decryption, encryption) can be set independently.
 
 ### Make KeyStore
 
-To use HTTPS between remote processes, we need a digital certificate. You may supply your own keystore, or use the
-**_MakeKeystore_** CLI (in keyceremonytrustee module).
+To use HTTPS between remote processes, we need a digital certificate. You may use the
+[keystore tool](https://docs.oracle.com/en/java/javase/17/docs/specs/man/keytool.html)
+or use the **_MakeKeystore_** CLI (in keyceremonytrustee module).
+
 This will generate a self-signed certificate and write it to a JKS keystore, to be used in the webapps.
 The certificate _alias_ = "electionguard" and _domains_ = listOf("127.0.0.1", "0.0.0.0", "localhost").
 
+Keep the keystore file and passwords safe and private. If they are compromised, and for each election, generate new ones.
+
+In the examples above, its is assumed that EG_KEYSTORE_PASSWORD and ELECTIONGUARD_SSL_PASSWORD are environment variables
+set for example in your shell startup script. 
+
+
 ````
-Usage: MakeKeyStore options_list
+Usage: MakeKeystore options_list
 Options: 
     --keystorePassword, -kpwd -> password for the entire keystore (always required) { String }
     --electionguardPassword, -epwd -> password for the electionguard certificate entry (always required) { String }
-    --sslKeyStore, -keystore -> write the keystore file to this path, default webapps/keystore.jks { String }
+    --keystore, -keystore [egKeystore.jks] -> write the keystore file to this path { String }
     --help, -h -> Usage info 
 ````
 
@@ -409,15 +480,64 @@ Example
 ````
 /usr/lib/jvm/jdk-19/bin/java \
   -classpath keyceremonytrustee/build/libs/keyceremonytrustee-all.jar \
-  electionguard.webapps.keystore.MakeKeyStoreKt \
-  --inputDir testInput/unchained \
-  --outputDir testOut/encrypt/RunEgkServer
+  electionguard.webapps.keystore.MakeKeystoreKt \
+  --keystorePassword $EG_KEYSTORE_PASSWORD \
+  --electionguardPassword $ELECTIONGUARD_SSL_PASSWORD
+````
+
+Check contents with keytool:
+
+````
+keytool -keystore egKeystore.jks -storepass $EG_KEYSTORE_PASSWORD -list -v
 ````
 
 output:
 
 ````
-MakeKeyStore
- keystorePassword = 'ksPassword' electionguardPassword = 'egPassword'
- write to path = 'webapps/keystore.jks'
+Keystore type: JKS
+Keystore provider: SUN
+
+Your keystore contains 1 entry
+
+Alias name: electionguard
+Creation date: Sep 11, 2023
+Entry type: PrivateKeyEntry
+Certificate chain length: 1
+Certificate[1]:
+Owner: CN=localhost, OU=Kotlin, O=JetBrains, C=RU
+Issuer: CN=localhost, OU=Kotlin, O=JetBrains, C=RU
+Serial number: 6ad60b7f8c3124cc
+Valid from: Mon Sep 11 10:54:42 MDT 2023 until: Thu Sep 14 10:54:42 MDT 2023
+Certificate fingerprints:
+	 SHA1: DC:41:27:52:39:69:FA:C6:3B:7D:22:4F:C8:A4:11:9C:A4:85:2C:85
+	 SHA256: 47:25:A7:FE:4A:25:C4:9F:12:0F:8E:CF:7A:D7:95:A6:5B:87:49:32:C7:8E:B1:C8:56:CA:55:48:30:39:14:7E
+Signature algorithm name: SHA256withRSA
+Subject Public Key Algorithm: 3072-bit RSA key
+Version: 3
+
+Extensions: 
+
+#1: ObjectId: 2.5.29.37 Criticality=false
+ExtendedKeyUsages [
+  serverAuth
+]
+
+#2: ObjectId: 2.5.29.17 Criticality=false
+SubjectAlternativeName [
+  DNSName: 127.0.0.1
+  DNSName: 0.0.0.0
+  DNSName: localhost
+  IPAddress: 127.0.0.1
+]
+
+
+
+*******************************************
+*******************************************
+
+
+
+Warning:
+The JKS keystore uses a proprietary format. It is recommended to migrate to PKCS12 which is an industry standard format using "keytool -importkeystore -srckeystore egKeystore.jks -destkeystore egKeystore.jks -deststoretype pkcs12".
+
 ````
