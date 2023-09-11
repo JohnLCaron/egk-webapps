@@ -1,6 +1,5 @@
 package electionguard.webapps.decryption
 
-import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.getOrThrow
 import com.github.michaelbull.result.partition
@@ -34,9 +33,10 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManagerFactory
 import javax.net.ssl.X509TrustManager
 
-var keystore = ""
-var ksPassword = ""
+private var keystore = ""
+private var ksPassword = ""
 var egPassword = ""
+var isSSL = false
 
 private val logger = KotlinLogging.logger("RunRemoteDecryption")
 
@@ -57,11 +57,16 @@ fun main(args: Array<String>) {
         shortName = "out",
         description = "Directory to write output election record"
     ).required()
-    val remoteUrl by parser.option(
+    val serverHost by parser.option(
         ArgType.String,
-        shortName = "remoteUrl",
-        description = "URL of decrypting trustee app "
-    ).default("http://localhost:11190/egk")
+        shortName = "trusteeHost",
+        description = "hostname of decrypting trustee webapp "
+    ).default("localhost")
+    val serverPort by parser.option(
+        ArgType.Int,
+        shortName = "serverPort",
+        description = "port of decrypting trustee webapp "
+    ).default(11190)
     val createdBy by parser.option(
         ArgType.String,
         shortName = "createdBy",
@@ -72,35 +77,33 @@ fun main(args: Array<String>) {
         shortName = "missing",
         description = "missing guardians' xcoord, comma separated, eg '2,4'"
     )
-    /*
     val sslKeyStore by parser.option(
         ArgType.String,
         shortName = "keystore",
         description = "file path of the keystore file"
-    ).required()
+    ).default("egKeystore.jks")
     val keystorePassword by parser.option(
         ArgType.String,
         shortName = "kpwd",
         description = "password for the entire keystore"
-    ).required()
+    )
     val electionguardPassword by parser.option(
         ArgType.String,
         shortName = "epwd",
         description = "password for the electionguard entry"
-    ).required()
-     */
+    )
     parser.parse(args)
-    println("RunRemoteDecryption starting\n   input= $inputDir\n   missing= '$missing'\n   output = $outputDir")
 
-    val isSsl = false // (sslKeyStore != null) && (keystorePassword != null) && (electionguardPassword != null)
-
-    /*
-    if (isSsl) {
+    isSSL = (keystorePassword != null) && (electionguardPassword != null)
+    if (isSSL) {
         keystore = sslKeyStore
-        ksPassword = keystorePassword
-        egPassword = electionguardPassword
+        ksPassword = keystorePassword!!
+        egPassword = electionguardPassword!!
     }
-     */
+    val remoteUrl = if (isSSL) "https://$serverHost:$serverPort/egk" else "http://$serverHost:$serverPort/egk"
+
+    println("RunRemoteDecryption starting\n   input= $inputDir\n   missing= '$missing'\n   output= $outputDir\n" +
+            "   isSSL= $isSSL\n   remoteUrl= $remoteUrl")
 
     val group = productionGroup()
     val success = runRemoteDecrypt(
@@ -123,6 +126,26 @@ fun runRemoteDecrypt(
 ): Boolean {
     val starting = getSystemTimeInMillis()
 
+    val client = HttpClient(Java) {
+        engine {
+            protocolVersion = java.net.http.HttpClient.Version.HTTP_2
+            if (isSSL) {
+                config {
+                    sslContext(SslSettings.getSslContext())
+                }
+            }
+        }
+        install(Logging) {
+            logger = Logger.DEFAULT
+            level = LogLevel.INFO
+            // level = LogLevel.ALL
+        }
+        install(ContentNegotiation) {
+            json()
+        }
+    }
+    // reset(client, remoteUrl) // TODO ??
+
     val consumerIn = makeConsumer(inputDir, group)
     val tallyResult: TallyResult = consumerIn.readTallyResult().getOrThrow { IllegalStateException(it) }
     val electionInitialized = tallyResult.electionInitialized
@@ -141,14 +164,6 @@ fun runRemoteDecrypt(
         throw IllegalStateException("number of guardians present ${presentGuardianIds.size} < quorum ${electionInitialized.config.quorum}")
     }
     println("runRemoteDecrypt present = $presentGuardianIds missing = $missingGuardianIds")
-
-    val client = HttpClient(Java) {
-        install(Logging)
-        install(ContentNegotiation) {
-            json()
-        }
-    }
-    reset(client, remoteUrl)
 
     // public fun <V, E> Iterable<Result<V, E>>.partition(): Pair<List<V>, List<E>> {
     val trusteeResults : List<Result<DecryptingTrusteeIF, String>> = presentGuardians.map {
@@ -186,6 +201,7 @@ fun runRemoteDecrypt(
     return true
 }
 
+/*
 fun reset(client : HttpClient, remoteUrl : String) {
     runBlocking {
         val url = "$remoteUrl/dtrustee/reset"
@@ -193,6 +209,8 @@ fun reset(client : HttpClient, remoteUrl : String) {
         println("runRemoteDecrypt reset ${response.status}")
     }
 }
+
+ */
 
 private object SslSettings {
     fun getKeyStore(): KeyStore {

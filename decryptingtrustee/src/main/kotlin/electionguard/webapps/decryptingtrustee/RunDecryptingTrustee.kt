@@ -19,9 +19,11 @@ import java.io.File
 import java.io.FileInputStream
 import java.security.KeyStore
 
-val groupContext = productionGroup(PowRadixOption.HIGH_MEMORY_USE, ProductionMode.Mode4096)
+private var ksPassword = ""
+private var egPassword = ""
+var isSSL = false
 var trusteeDir = ""
-var credentialsPassword = ""
+val groupContext = productionGroup(PowRadixOption.HIGH_MEMORY_USE, ProductionMode.Mode4096)
 
 fun main(args: Array<String>) {
     val parser = ArgParser("RunDecryptingTrustee")
@@ -39,7 +41,7 @@ fun main(args: Array<String>) {
         ArgType.String,
         shortName = "keystore",
         description = "file path of the keystore file"
-    )
+    ).default("egKeystore.jks")
     val keystorePassword by parser.option(
         ArgType.String,
         shortName = "kpwd",
@@ -54,24 +56,19 @@ fun main(args: Array<String>) {
 
     trusteeDir = trustees
 
-    val isSsl = false // (sslKeyStore != null) && (keystorePassword != null) && (electionguardPassword != null)
-
-    /*
-    if (isSsl) {
-        keystore = sslKeyStore
-        ksPassword = keystorePassword
-        egPassword = electionguardPassword
-        credentialsPassword = electionguardPassword
+    isSSL = (keystorePassword != null) && (electionguardPassword != null)
+    if (isSSL) {
+        ksPassword = keystorePassword!!
+        egPassword = electionguardPassword!!
    }
-     */
 
     println("RunDecryptingTrustee\n" +
-            "  isSsl = $isSsl\n" +
+            "  isSSL = $isSSL\n" +
             "  serverPort = '$serverPort'\n" +
             "  trusteeDir = '$trusteeDir'\n" +
             " ")
 
-    if (isSsl) {
+    if (isSSL) {
         val keyStoreFile = File(sslKeyStore)
         val keyStore: KeyStore = KeyStore.getInstance(KeyStore.getDefaultType()) // LOOK assumes jks
         keyStore.load(FileInputStream(keyStoreFile), keystorePassword!!.toCharArray())
@@ -110,7 +107,7 @@ fun Application.module() {
             "Status: $status, HTTP method: $httpMethod, Path: $path"
         }
     }
-    configureSecurity(credentialsPassword)
+    if (isSSL) configureSecurity(egPassword)
     configureSerialization()
     configureAdministration()
     configureRouting()

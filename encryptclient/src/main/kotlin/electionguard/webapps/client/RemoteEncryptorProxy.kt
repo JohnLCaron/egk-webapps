@@ -29,8 +29,9 @@ class RemoteEncryptorProxy(
             val url = "$remoteURL/encryptBallot/$device"
             val response: HttpResponse = client.post(url) {
                 headers {
+                    append(HttpHeaders.Accept, "application/json")
                     append(HttpHeaders.ContentType, "application/json")
-                    // basicAuth("electionguard", certPassword)
+                    if (isSSL) basicAuth("electionguard", egPassword)
                 }
                 setBody(ballot.publishJson())
             }
@@ -46,7 +47,7 @@ class RemoteEncryptorProxy(
             val response: HttpResponse = client.get(url) {
                 headers {
                     append(HttpHeaders.Accept, "application/json")
-                    // basicAuth("electionguard", certPassword)
+                    if (isSSL) basicAuth("electionguard", egPassword)
                 }
             }
             println("RemoteEncryptorProxy castBallot for ccode=${ccode} = ${response.status}")
@@ -66,7 +67,7 @@ class RemoteEncryptorProxy(
             val response: HttpResponse = client.get(url) {
                 headers {
                     append(HttpHeaders.Accept, "application/json")
-                    // basicAuth("electionguard", certPassword)
+                    if (isSSL) basicAuth("electionguard", egPassword)
                 }
             }
             println("RemoteEncryptorProxy challengeBallot for ccode=${ccode} = ${response.status}")
@@ -86,7 +87,7 @@ class RemoteEncryptorProxy(
             val response: HttpResponse = client.get(url) {
                 headers {
                     append(HttpHeaders.Accept, "application/json")
-                    // basicAuth("electionguard", certPassword)
+                    if (isSSL) basicAuth("electionguard", egPassword)
                 }
             }
             println("RemoteEncryptorProxy castBallot for ccode=${ccode} = ${response.status}")
@@ -107,7 +108,7 @@ class RemoteEncryptorProxy(
             val response: HttpResponse = client.get(url) {
                 headers {
                     append(HttpHeaders.Accept, "application/json")
-                    // basicAuth("electionguard", certPassword)
+                    if (isSSL) basicAuth("electionguard", egPassword)
                 }
             }
             println("RemoteEncryptorProxy sync device=${device} = ${response.status}")

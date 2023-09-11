@@ -26,9 +26,10 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManagerFactory
 import javax.net.ssl.X509TrustManager
 
-var keystore = ""
-var ksPassword = ""
-var egPassword = ""
+private var keystore = ""
+private var ksPassword = ""
+private var egPassword = ""
+var isSSL = false
 
 /**
  * Run Remote KeyCeremony CLI.
@@ -40,70 +41,72 @@ fun main(args: Array<String>) {
         ArgType.String,
         shortName = "in",
         description = "Directory containing input ElectionConfig record"
-    )
+    ).required()
     val outputDir by parser.option(
         ArgType.String,
         shortName = "out",
         description = "Directory to write output ElectionInitialized record"
     ).required()
-    val remoteUrl by parser.option(
+    val serverHost by parser.option(
         ArgType.String,
-        shortName = "remoteUrl",
-        description = "URL of keyceremony trustee webapp "
-    ).default("http://localhost:11183/egk")
+        shortName = "trusteeHost",
+        description = "hostname of keyceremony trustee webapp "
+    ).default("localhost")
+    val serverPort by parser.option(
+        ArgType.Int,
+        shortName = "serverPort",
+        description = "port of keyceremony trustee webapp "
+    ).default(11183)
+    val createdBy by parser.option(
+        ArgType.String,
+        shortName = "createdBy",
+        description = "who created (for ElectionInitialized metadata)"
+    )
     val sslKeyStore by parser.option(
         ArgType.String,
         shortName = "keystore",
         description = "file path of the keystore file"
-    )
+    ).default("egKeystore.jks")
     val keystorePassword by parser.option(
         ArgType.String,
         shortName = "kpwd",
-        description = "password for the entire keystore"
+        description = "password for the keystore file"
     )
     val electionguardPassword by parser.option(
         ArgType.String,
         shortName = "epwd",
         description = "password for the electionguard entry"
     )
-
-    val createdBy by parser.option(
-        ArgType.String,
-        shortName = "createdBy",
-        description = "who created for ElectionInitialized metadata"
-    )
     parser.parse(args)
 
-    val isSsl = false // (sslKeyStore != null) && (keystorePassword != null) && (electionguardPassword != null)
-
-    /*
-    if (isSsl) {
+    isSSL = (keystorePassword != null) && (electionguardPassword != null)
+    if (isSSL) {
         keystore = sslKeyStore
-        ksPassword = keystorePassword
-        egPassword = electionguardPassword
+        ksPassword = keystorePassword!!
+        egPassword = electionguardPassword!!
     }
-     */
+    val remoteUrl = if (isSSL) "https://$serverHost:$serverPort/egk" else "http://$serverHost:$serverPort/egk"
 
     val group = productionGroup()
-    var createdFrom : String
-
-    val consumerIn = makeConsumer(inputDir!!, group)
-    createdFrom = inputDir!!
-    println(
-        "RunRemoteKeyCeremony\n" +
-                "  inputDir = '$inputDir'\n" +
-                "  outputDir = '$outputDir'\n" +
-                "  isSsl = $isSsl\n"
+    val consumerIn = makeConsumer(inputDir, group)
+    println("RunRemoteKeyCeremony\n" +
+            "  inputDir = '$inputDir'\n" +
+            "  outputDir = '$outputDir'\n" +
+            "  remoteUrl = $remoteUrl\n" +
+            "  isSsl = $isSSL"
     )
-    val config = consumerIn.readElectionConfig().getOrThrow { IllegalStateException(it) }
+    if (isSSL) {
+        println("  keystore = '$keystore'")
+    }
 
-    runKeyCeremony(group, remoteUrl, createdFrom, config, outputDir, consumerIn.isJson(), createdBy)
+    val config = consumerIn.readElectionConfig().getOrThrow { IllegalStateException(it) }
+    runKeyCeremony(group, remoteUrl, inputDir, config, outputDir, consumerIn.isJson(), createdBy)
 }
 
 fun runKeyCeremony(
     group: GroupContext,
     remoteUrl: String,
-    createdFrom: String,
+    inputDir: String,
     config: ElectionConfig,
     outputDir: String,
     isJson : Boolean,
@@ -112,6 +115,14 @@ fun runKeyCeremony(
     val starting = getSystemTimeInMillis()
 
     val client = HttpClient(Java) {
+        engine {
+            protocolVersion = java.net.http.HttpClient.Version.HTTP_2
+            if (isSSL) {
+                config {
+                    sslContext(SslSettings.getSslContext())
+                }
+            }
+        }
         install(Logging) {
             logger = Logger.DEFAULT
             level = LogLevel.INFO
@@ -120,15 +131,6 @@ fun runKeyCeremony(
         install(ContentNegotiation) {
             json()
         }
-        /*
-        if (isSsl) {
-            engine {
-                config {
-                    sslContext(SslSettings.getSslContext())
-                }
-            }
-        }
-         */
     }
 
     val trustees: List<RemoteKeyTrusteeProxy> = List(config.numberOfGuardians) {
@@ -147,10 +149,9 @@ fun runKeyCeremony(
         config,
         mapOf(
             Pair("CreatedBy", createdBy ?: "RunRemoteKeyCeremony"),
-            Pair("CreatedFrom", createdFrom),
+            Pair("CreatedFrom", inputDir),
         )
     )
-
     val publisher = makePublisher(outputDir, false, isJson)
     publisher.writeElectionInitialized(electionInitialized)
     println("writeElectionInitialized to $outputDir")
@@ -161,7 +162,6 @@ fun runKeyCeremony(
 
     val took = getSystemTimeInMillis() - starting
     println("RunTrustedKeyCeremony took $took millisecs")
-
     return true
 }
 

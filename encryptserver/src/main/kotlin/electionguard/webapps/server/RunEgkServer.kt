@@ -1,5 +1,8 @@
 package electionguard.webapps.server
 
+import electionguard.core.PowRadixOption
+import electionguard.core.ProductionMode
+import electionguard.core.productionGroup
 import electionguard.webapps.server.models.EncryptionService
 import electionguard.webapps.server.plugins.*
 import io.ktor.server.application.*
@@ -9,6 +12,11 @@ import java.security.KeyStore
 import kotlinx.cli.*
 import org.slf4j.LoggerFactory
 import java.io.*
+
+private var ksPassword = ""
+var egPassword = ""
+var isSSL = false
+val groupContext = productionGroup(PowRadixOption.HIGH_MEMORY_USE, ProductionMode.Mode4096)
 
 fun main(args: Array<String>) {
     val parser = ArgParser("RunEgkServerKt")
@@ -22,11 +30,16 @@ fun main(args: Array<String>) {
         shortName = "out",
         description = "Directory containing output election record"
     ).required()
+    val serverPort by parser.option(
+        ArgType.Int,
+        shortName = "port",
+        description = "listen on this port"
+    ).default(11111)
     val sslKeyStore by parser.option(
         ArgType.String,
         shortName = "keystore",
         description = "file path of the keystore file"
-    )
+    ).default("egKeystore.jks")
     val keystorePassword by parser.option(
         ArgType.String,
         shortName = "kpwd",
@@ -37,26 +50,21 @@ fun main(args: Array<String>) {
         shortName = "epwd",
         description = "password for the electionguard entry"
     )
-    val serverPort by parser.option(
-        ArgType.Int,
-        shortName = "port",
-        description = "listen on this port, default = 11111"
-    )
     parser.parse(args)
-    val sport = serverPort ?: 11111
 
-    val isSsl = (sslKeyStore != null) && (keystorePassword != null) && (electionguardPassword != null)
+    isSSL = (keystorePassword != null) && (electionguardPassword != null)
 
     println("ElectionGuardKotlinServer\n" +
             "  inputDir = '$inputDir'\n" +
             "  outputDir = '$outputDir'\n" +
-            "  isSsl = '$isSsl'\n" +
-            "  serverPort = '$sport'\n" +
+            "  isSsl = '$isSSL'\n" +
+            "  serverPort = '$serverPort'\n" +
             " ")
 
     EncryptionService.initialize(inputDir, outputDir)
 
-    if (isSsl) {
+    if (isSSL) {
+        egPassword = electionguardPassword!!
         val keyStoreFile = File(sslKeyStore)
         val keyStore: KeyStore = KeyStore.getInstance(KeyStore.getDefaultType()) // LOOK assumes jks
         keyStore.load(FileInputStream(keyStoreFile), keystorePassword!!.toCharArray())
@@ -68,7 +76,7 @@ fun main(args: Array<String>) {
                 keyAlias = "electionguard",
                 keyStorePassword = { keystorePassword!!.toCharArray() },
                 privateKeyPassword = { electionguardPassword!!.toCharArray() }) {
-                port = sport
+                port = serverPort
                 keyStorePath = keyStoreFile
             }
             module(Application::module)
@@ -76,13 +84,14 @@ fun main(args: Array<String>) {
         embeddedServer(Netty, environment).start(wait = true)
 
     } else {
+        // TODO host = "localhost" ??
         embeddedServer(Netty, port = 11111, host = "localhost", module = Application::module)
             .start(wait = true)
     }
 }
 
 fun Application.module() {
-    configureSecurity()
+    if (isSSL) configureSecurity()
     configureMonitoring()
     configureSerialization()
     configureAdministration()

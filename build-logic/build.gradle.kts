@@ -48,8 +48,10 @@ dependencies {
     implementation("io.ktor:ktor-server-content-negotiation:${ktorVersion}")
     implementation("io.ktor:ktor-server-call-logging:${ktorVersion}")
 
+    implementation("io.ktor:ktor-client-core:${ktorVersion}")
     implementation("io.ktor:ktor-client-java:${ktorVersion}")
     implementation("io.ktor:ktor-client-content-negotiation:${ktorVersion}")
+    implementation("io.ktor:ktor-client-auth:${ktorVersion}")
     implementation("io.ktor:ktor-client-logging:${ktorVersion}")
 
     testImplementation("org.jetbrains.kotlin:kotlin-test:${kotlinVersion}")

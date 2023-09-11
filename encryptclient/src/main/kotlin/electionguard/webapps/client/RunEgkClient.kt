@@ -20,11 +20,17 @@ import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.default
 import kotlinx.cli.required
-import org.slf4j.LoggerFactory
-import java.io.File
 import java.io.FileInputStream
 import java.security.KeyStore
+import javax.net.ssl.SSLContext
+import javax.net.ssl.TrustManagerFactory
+import javax.net.ssl.X509TrustManager
 import kotlin.random.Random
+
+private var keystore = ""
+private var ksPassword = ""
+var egPassword = ""
+var isSSL = false
 
 fun main(args: Array<String>) {
     val parser = ArgParser("RunEgkClientKt")
@@ -38,26 +44,31 @@ fun main(args: Array<String>) {
         shortName = "device",
         description = "Device name"
     ).default("testDevice")
-    val serverUrl by parser.option(
-        ArgType.String,
-        shortName = "server",
-        description = "Server URL"
-    ).default("http://localhost:11111/egk")
     val outputDir by parser.option(
         ArgType.String,
         shortName = "out",
         description = "Directory containing output election record, optional for validating"
-    )
+    ).required()
     val nballots by parser.option(
         ArgType.Int,
         shortName = "nballots",
         description = "Number of test ballots to send to server"
     ).default(11)
+    val serverHost by parser.option(
+        ArgType.String,
+        shortName = "trusteeHost",
+        description = "hostname of encryption server trustee webapp "
+    ).default("localhost")
+    val serverPort by parser.option(
+        ArgType.Int,
+        shortName = "serverPort",
+        description = "port of encryption server webapp"
+    ).default(11111)
     val sslKeyStore by parser.option(
         ArgType.String,
         shortName = "keystore",
         description = "file path of the keystore file"
-    )
+    ).default("egKeystore.jks")
     val keystorePassword by parser.option(
         ArgType.String,
         shortName = "kpwd",
@@ -70,17 +81,31 @@ fun main(args: Array<String>) {
     )
     parser.parse(args)
 
-    val isSsl = false // (sslKeyStore != null) && (keystorePassword != null) && (electionguardPassword != null)
+    isSSL = (keystorePassword != null) && (electionguardPassword != null)
+    val serverUrl = if (isSSL) "https://$serverHost:$serverPort/egk" else "http://$serverHost:$serverPort/egk"
+    if (isSSL) {
+        keystore = sslKeyStore
+        ksPassword = keystorePassword!!
+        egPassword = electionguardPassword!!
+    }
 
     println("RunEgkClient\n" +
             "  inputDir = '$inputDir'\n" +
             "  device = '$device'\n" +
-            "  serverUrl = '$serverUrl'\n" +
             "  outputDir = '$outputDir'\n" +
-            "  isSsl = '$isSsl'\n" +
+            "  serverUrl = '$serverUrl'\n" +
+            "  isSSL = '$isSSL'\n" +
             " ")
 
     val client = HttpClient(Java) {
+        engine {
+            protocolVersion = java.net.http.HttpClient.Version.HTTP_2
+            if (isSSL) {
+                config {
+                    sslContext(SslSettings.getSslContext())
+                }
+            }
+        }
         install(Logging) {
             logger = Logger.DEFAULT
             level = LogLevel.INFO
@@ -89,15 +114,6 @@ fun main(args: Array<String>) {
         install(ContentNegotiation) {
             json()
         }
-        /*
-        if (isSsl) {
-            engine {
-                config {
-                    sslContext(SslSettings.getSslContext())
-                }
-            }
-        }
-         */
     }
     val proxy = RemoteEncryptorProxy(client, serverUrl)
 
@@ -160,5 +176,31 @@ fun verifyOutput(group: GroupContext, outputDir: String) {
     if (record.config().chainConfirmationCodes) {
         val chainResult = verifier.verifyConfirmationChain(record)
         println("verifyChain: $chainResult")
+    }
+}
+
+private object SslSettings {
+    fun getKeyStore(): KeyStore {
+        val keyStoreFile = FileInputStream(keystore)
+        val keyStorePassword = ksPassword.toCharArray()
+        val keyStore: KeyStore = KeyStore.getInstance(KeyStore.getDefaultType())
+        keyStore.load(keyStoreFile, keyStorePassword)
+        return keyStore
+    }
+
+    fun getTrustManagerFactory(): TrustManagerFactory? {
+        val trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
+        trustManagerFactory.init(getKeyStore())
+        return trustManagerFactory
+    }
+
+    fun getSslContext(): SSLContext? {
+        val sslContext = SSLContext.getInstance("TLS")
+        sslContext.init(null, getTrustManagerFactory()?.trustManagers, null)
+        return sslContext
+    }
+
+    fun getTrustManager(): X509TrustManager {
+        return getTrustManagerFactory()?.trustManagers?.first { it is X509TrustManager } as X509TrustManager
     }
 }

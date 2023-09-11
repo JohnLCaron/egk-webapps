@@ -34,8 +34,13 @@ class DecryptingTrusteeProxy(
     init {
         runBlocking {
             val url = "$remoteURL/dtrustee/create/$id"
-            val response: HttpResponse = client.get(url)
-            if (response.status == HttpStatusCode.BadRequest) {
+            val response: HttpResponse = client.get(url)  {
+                headers {
+                    append(HttpHeaders.Accept, "application/json")
+                    if (isSSL) basicAuth("electionguard", egPassword)
+                }
+            }
+            if (response.status != HttpStatusCode.OK) {
                 initError = "DecryptingTrusteeProxy create $id == ${response.status}"
             } else {
                 val publicKeyJson: ElementModPJson = response.body()
@@ -57,6 +62,7 @@ class DecryptingTrusteeProxy(
             val response: HttpResponse = client.post(url) {
                 headers {
                     append(HttpHeaders.ContentType, "application/json")
+                    if (isSSL) basicAuth("electionguard", egPassword)
                 }
                 setBody(DecryptRequest(texts).publishJson())
             }
@@ -80,6 +86,7 @@ class DecryptingTrusteeProxy(
             val response: HttpResponse = client.post(url) {
                 headers {
                     append(HttpHeaders.ContentType, "application/json")
+                    if (isSSL) basicAuth("electionguard", egPassword)
                 }
                 setBody(ChallengeRequests(challenges).publishJson())
             }
