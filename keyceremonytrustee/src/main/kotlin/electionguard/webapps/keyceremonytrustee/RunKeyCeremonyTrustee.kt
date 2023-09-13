@@ -21,6 +21,7 @@ import java.security.KeyStore
 
 private var ksPassword = ""
 private var egPassword = ""
+var isJson = true
 var isSSL = false
 var trusteeDir = "tmp"
 val groupContext = productionGroup(PowRadixOption.HIGH_MEMORY_USE, ProductionMode.Mode4096)
@@ -35,8 +36,13 @@ fun main(args: Array<String>) {
     val serverPort by parser.option(
         ArgType.Int,
         shortName = "port",
-        description = "listen on this port, default = 11183"
+        description = "listen on this port"
     ).default(11183)
+    val useJson by parser.option(
+        ArgType.Boolean,
+        shortName = "json",
+        description = "serialize to Json or Protobuf"
+    ).default(true)
     val sslKeyStore by parser.option(
         ArgType.String,
         shortName = "keystore",
@@ -55,6 +61,7 @@ fun main(args: Array<String>) {
     parser.parse(args)
 
     trusteeDir = trustees
+    isJson = useJson
     isSSL = (keystorePassword != null) && (electionguardPassword != null)
     if (isSSL) {
         ksPassword = keystorePassword!!
@@ -63,6 +70,7 @@ fun main(args: Array<String>) {
 
     println("KeyCeremonyRemoteTrustee\n" +
             "  isSSL = $isSSL\n" +
+            "  useJson = $useJson\n" +
             "  serverPort = '$serverPort'\n" +
             "  trusteeDir = '$trusteeDir'"
             )

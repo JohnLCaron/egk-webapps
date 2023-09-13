@@ -1,50 +1,54 @@
 # Remote Key Ceremony REST API
 
-_last update 9/10/2023_
+_last update 9/13/2023_
 
-route("/egk/ktrustee")
+Also see [OpenDoc API](../encryptserver/src/main/resources/openapi/documentation.yaml)
+
+route("/egk/ktrustee") {
 
     get {
         call.respond(List<RemoteKeyTrustee>)
     }
 
     post {
-      val rguardian = call.receive(RemoteKeyTrustee)
+      val rguardian = call.receive(RemoteKeyTrusteeJson)
       call.respondText("RemoteKeyTrustee ${rguardian.id} created")
       status = HttpStatusCode.Created
     }
 
-    get("{id?}/publicKeys") {
-        call.respond(PublicKeys)
+    get("{id}/publicKeys") {
+        call.respond(PublicKeysJson)
     }
     
-    post("{id?}/receivePublicKeys") {
-       val publicKeys = call.recieve(PublicKeys)
+    post("{id}/receivePublicKeys") {
+       val publicKeys = call.recieve(PublicKeysJson)
        call.respondText( "RemoteKeyTrustee ${rguardian.id} receivePublicKeys from ${publicKeys.guardianId} correctly")
     }
     
-    get("{id?}/{from?}/encryptedKeyShareFor") {
-         call.respond(EncryptedKeyShare)
+    get("{id}/encryptedKeyShareFor/{forTrustee}") {
+         call.respond(EncryptedKeyShareJson)
     }  
     
-    post("{id?}/receiveEncryptedKeyShare") {
-       val publicKeys = call.recieve(EncryptedKeyShare)
+    post("{id}/receiveEncryptedKeyShare") {
+       val publicKeys = call.recieve(EncryptedKeyShareJson)
        call.respondText( "RemoteKeyTrustee ${rguardian.id} receiveEncryptedKeyShare correctly")
     }
     
-    get("{id?}/{from?}/keyShareFor") {
-         call.respond(KeyShare)
+    get("{id}/keyShareFor/{forTrustee}") {
+         call.respond(KeyShareJson)
     }  
     
-    post("{id?}/receiveKeyShare") {
-       val publicKeys = call.recieve(KeySharee)
+    post("{id}/receiveKeyShare") {
+       val publicKeys = call.recieve(KeyShareJson)
        call.respondText( "RemoteKeyTrustee ${rguardian.id} receiveSecretKeyShare correctly)
     }
     
-    get("{id?}/saveState/{isJson?}")  {
+    get("{id}/saveState")  {
        call.respondText("RemoteKeyTrustee ${rguardian.id} saveState succeeded")
     }  
     
-    get("{id?}/keyShare") {
-         call.respond(rguardian.keyShare()) // ElementModQ
+    get("{id}/checkComplete") {
+         call.respond("true" or "false")
     }  
+
+}

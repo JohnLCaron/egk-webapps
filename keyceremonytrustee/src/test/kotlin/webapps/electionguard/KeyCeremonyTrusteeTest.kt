@@ -524,25 +524,11 @@ class KeyCeremonyTrusteeTest {
         }
 
         // sneak this test in
-        myclient.get("/egk/ktrustee/trustee1/saveState/true").apply {
+        myclient.get("/egk/ktrustee/trustee1/saveState").apply {
             assertEquals(HttpStatusCode.OK, status)
         }
     }
 
-    /*
-        fun saveState(isJson : Boolean): Result<Boolean, String> {
-        return runBlocking {
-            val url = "$remoteURL/ktrustee/$id/saveState/$isJson"
-            val response: HttpResponse = client.get(url) {
-                headers {
-                    if (isSSL) basicAuth("electionguard", certPassword)
-                }
-            }
-            println("$id saveState isJson=$isJson status=${response.status}")
-            if (response.status == HttpStatusCode.OK) Ok(true) else Err(response.toString())
-        }
-    }
-     */
     @Test
     fun testSaveState() = testApplication {
         remoteKeyTrustees.clear()
@@ -559,7 +545,7 @@ class KeyCeremonyTrusteeTest {
             assertEquals("RemoteKeyTrustee trustee1 created", bodyAsText())
         }
 
-        client.get("/egk/ktrustee/trustee1/saveState/true").apply {
+        client.get("/egk/ktrustee/trustee1/saveState").apply {
             assertEquals(HttpStatusCode.InternalServerError, status)
             assertEquals("RemoteKeyTrustee trustee1 saveState failed requires nguardians 2 but have 1 shares", bodyAsText())
         }

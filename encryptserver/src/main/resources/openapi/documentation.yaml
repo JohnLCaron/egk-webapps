@@ -1,0 +1,244 @@
+openapi: "3.0.3"
+info:
+  title: "egk_webapps API"
+  description: "egk_webapps API"
+  version: "1.0.0"
+servers:
+- url: "https://egk_webapps"
+paths:
+  /egk/castBallot/{device}/{ccode}:
+    get:
+      description: ""
+      parameters:
+      - name: "device"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      - name: "ccode"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: ""
+                Example#2:
+                  value: "Missing id"
+                Example#3:
+                  value: "Missing device"
+        "200":
+          description: "OK"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: ""
+  /egk/challengeAndDecryptBallot/{device}/{ccode}:
+    get:
+      description: ""
+      parameters:
+      - name: "device"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      - name: "ccode"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: ""
+                Example#2:
+                  value: "Missing id"
+                Example#3:
+                  value: "Missing device"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PlaintextBallotJson"
+  /egk/challengeBallot/{device}/{ccode}:
+    get:
+      description: ""
+      parameters:
+      - name: "device"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      - name: "ccode"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: ""
+                Example#2:
+                  value: "Missing id"
+                Example#3:
+                  value: "Missing device"
+        "200":
+          description: "OK"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: ""
+  /egk/encryptBallot/{device}:
+    post:
+      description: ""
+      parameters:
+      - name: "device"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              $ref: "#/components/schemas/PlaintextBallotJson"
+        required: true
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: "Missing device"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/EncryptionResponseJson"
+        "500":
+          description: "Internal Server Error"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: ""
+  /egk/hello:
+    get:
+      description: ""
+      responses:
+        "200":
+          description: "OK"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: "Hello!"
+  /egk/sync/{device}:
+    get:
+      description: ""
+      parameters:
+      - name: "device"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: ""
+                Example#2:
+                  value: "Missing device"
+        "200":
+          description: "OK"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: ""
+components:
+  schemas:
+    PlaintextSelectionJson:
+      type: "object"
+      properties:
+        selection_id:
+          type: "string"
+        sequence_order:
+          type: "integer"
+          format: "int32"
+        vote:
+          type: "integer"
+          format: "int32"
+    PlaintextContestJson:
+      type: "object"
+      properties:
+        contest_id:
+          type: "string"
+        sequence_order:
+          type: "integer"
+          format: "int32"
+        selections:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/PlaintextSelectionJson"
+        write_ins:
+          type: "array"
+          items:
+            type: "string"
+    PlaintextBallotJson:
+      type: "object"
+      properties:
+        ballot_id:
+          type: "string"
+        ballot_style:
+          type: "string"
+        contests:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/PlaintextContestJson"
+    EncryptionResponseJson:
+      type: "object"
+      properties:
+        confirmationCode:
+          type: "string"
