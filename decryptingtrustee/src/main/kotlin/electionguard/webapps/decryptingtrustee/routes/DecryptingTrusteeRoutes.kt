@@ -13,12 +13,12 @@ import io.ktor.server.routing.*
 import mu.KotlinLogging
 
 private val logger = KotlinLogging.logger("DecryptingTrusteeRoutes")
-private var trustees = mutableListOf<RemoteDecryptingTrusteeJson>()
+private var trustees = mutableMapOf<String, RemoteDecryptingTrusteeJson>()
 
 fun Route.trusteeRouting() {
     get {
         if (trustees.isNotEmpty()) {
-            call.respondText(trustees.joinToString(",") { it.id() }, status = HttpStatusCode.OK)
+            call.respondText(trustees.values.joinToString(",") { it.id() }, status = HttpStatusCode.OK)
         } else {
             call.respondText("No trustees found", status = HttpStatusCode.OK)
         }
@@ -26,19 +26,16 @@ fun Route.trusteeRouting() {
 
     post("reset") {
         if (trustees.isNotEmpty()) {
-            trustees = mutableListOf()
+            trustees = mutableMapOf()
         }
         call.respondText("trustees reset", status = HttpStatusCode.OK)
     }
 
-    get("create/{id?}") {
-        val id = call.parameters["id"] ?: return@get call.respondText(
-            "Missing id",
-            status = HttpStatusCode.BadRequest
-        )
+    get("create/{id}") {
+        val id = call.parameters["id"]!!
         try {
             val trustee = RemoteDecryptingTrusteeJson(id)
-            trustees.add(trustee)
+            trustees[id] = trustee
             println("RemoteDecryptingTrustee ${trustee.id()} created")
             val result = trustee.publicKey()
             call.respond(result.publishJson()) // ElementModP
@@ -51,16 +48,13 @@ fun Route.trusteeRouting() {
         }
     }
 
-    post("{id?}/decrypt") {
-        val id = call.parameters["id"] ?: return@post call.respondText(
-            "Missing id",
-            status = HttpStatusCode.BadRequest
+    post("{id}/decrypt") {
+        val id = call.parameters["id"]!!
+        val trustee = trustees[id]
+        if (trustee == null) return@post call.respondText(
+            "No trustee with id $id",
+            status = HttpStatusCode.NotFound
         )
-        val trustee =
-            trustees.find { it.xCoordinate() == id.toInt() } ?: return@post call.respondText(
-                "No trustee with id $id",
-                status = HttpStatusCode.NotFound
-            )
         val decryptRequestJson = call.receive<DecryptRequestJson>()
         val decryptRequest = decryptRequestJson.import(groupContext)
         if (decryptRequest is Ok) {
@@ -73,16 +67,13 @@ fun Route.trusteeRouting() {
         }
     }
 
-    post("{id?}/challenge") {
-        val id = call.parameters["id"] ?: return@post call.respondText(
-            "Missing id",
-            status = HttpStatusCode.BadRequest
+    post("{id}/challenge") {
+        val id = call.parameters["id"]!!
+        val trustee = trustees[id]
+        if (trustee == null) return@post call.respondText(
+            "No trustee with id $id",
+            status = HttpStatusCode.NotFound
         )
-        val trustee =
-            trustees.find { it.xCoordinate() == id.toInt() } ?: return@post call.respondText(
-                "No trustee with id $id",
-                status = HttpStatusCode.NotFound
-            )
         val requestsJson = call.receive<ChallengeRequestsJson>()
         val requests = requestsJson.import(groupContext)
         if (requests is Ok) {

@@ -217,10 +217,13 @@ To use SSL (see [Using SSL](#using-ssl)):
 
 The election administrator runs the **decryption** program, which orchestrates the
 _Decryption_ workflow where the encrypted tally and (optionally) the challenged ballots are decrypted.
+
 Each trustee runs a seperate
 **decryptingtrustee** _process_ that starts up first and then waits for the decryption program to send it
 requests. When the Decryption is done, the decrypted (aka plaintext) tally and ballots are written to the 
 election record.
+
+Also see [Remote Decryption REST API](docs/RemoteDecryption.md).
 
 ### The decryptingtrustee program
 
@@ -289,7 +292,7 @@ Options:
     --sslKeyStore, -keystore [egKeystore.jks] -> file path of the keystore file { String }
     --keystorePassword, -kpwd -> password for the entire keystore { String }
     --electionguardPassword, -epwd -> password for the electionguard entry { String }
-    --help, -h -> Usage info
+    --help, -h -> Usage info 
 ````
 
 Example:

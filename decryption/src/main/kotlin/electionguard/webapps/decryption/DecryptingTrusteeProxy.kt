@@ -58,7 +58,7 @@ class DecryptingTrusteeProxy(
         texts: List<ElementModP>,
     ): List<PartialDecryption> {
         return runBlocking {
-            val url = "$remoteURL/dtrustee/$xcoord/decrypt"
+            val url = "$remoteURL/dtrustee/$id/decrypt"
             val response: HttpResponse = client.post(url) {
                 headers {
                     append(HttpHeaders.ContentType, "application/json")
@@ -82,7 +82,7 @@ class DecryptingTrusteeProxy(
         challenges: List<ChallengeRequest>,
     ): List<ChallengeResponse> {
         return runBlocking {
-            val url = "$remoteURL/dtrustee/$xcoord/challenge"
+            val url = "$remoteURL/dtrustee/$id/challenge"
             val response: HttpResponse = client.post(url) {
                 headers {
                     append(HttpHeaders.ContentType, "application/json")

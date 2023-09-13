@@ -11,7 +11,6 @@ fun Application.configureRouting() {
     routing {
         if (isSSL) {
             route("/egk/dtrustee") {
-                // https://ktor.io/docs/basic.html
                 authenticate("auth-basic") {
                     trusteeRouting()
                 }
