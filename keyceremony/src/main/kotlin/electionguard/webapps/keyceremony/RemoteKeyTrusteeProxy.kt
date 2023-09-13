@@ -16,7 +16,7 @@ import electionguard.keyceremony.EncryptedKeyShare
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
-import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
 
@@ -31,6 +31,7 @@ class RemoteKeyTrusteeProxy(
     val certPassword: String,
 ) : KeyCeremonyTrusteeIF {
     var publicKeys : PublicKeys? = null
+    var secretKeyShare : ElementModQ? = null
 
     init {
         runBlocking {
@@ -57,7 +58,7 @@ class RemoteKeyTrusteeProxy(
             return Ok(this.publicKeys!!)
         }
         return runBlocking {
-            val url = "$remoteURL/ktrustee/$xcoord/publicKeys"
+            val url = "$remoteURL/ktrustee/$id/publicKeys"
             val response: HttpResponse = client.get(url) {
                 headers {
                     append(HttpHeaders.Accept, "application/json")
@@ -86,7 +87,7 @@ class RemoteKeyTrusteeProxy(
 
     override fun receivePublicKeys(publicKeys: PublicKeys): Result<Boolean, String> {
         return runBlocking {
-            val url = "$remoteURL/ktrustee/$xcoord/receivePublicKeys"
+            val url = "$remoteURL/ktrustee/$id/receivePublicKeys"
             val response: HttpResponse = client.post(url) {
                 headers {
                     append(HttpHeaders.ContentType, "application/json")
@@ -101,7 +102,7 @@ class RemoteKeyTrusteeProxy(
 
     override fun encryptedKeyShareFor(otherGuardian: String): Result<EncryptedKeyShare, String> {
         return runBlocking {
-            val url = "$remoteURL/ktrustee/$xcoord/$otherGuardian/encryptedKeyShareFor"
+            val url = "$remoteURL/ktrustee/$id/encryptedKeyShareFor/$otherGuardian"
             val response: HttpResponse = client.get(url) {
                 headers {
                     append(HttpHeaders.Accept, "application/json")
@@ -125,7 +126,7 @@ class RemoteKeyTrusteeProxy(
             return Err("$id receiveEncryptedKeyShare sent null share")
         }
         return runBlocking {
-            val url = "$remoteURL/ktrustee/$xcoord/receiveEncryptedKeyShare"
+            val url = "$remoteURL/ktrustee/$id/receiveEncryptedKeyShare"
             val response: HttpResponse = client.post(url) {
                 headers {
                     append(HttpHeaders.ContentType, "application/json")
@@ -140,7 +141,7 @@ class RemoteKeyTrusteeProxy(
 
     override fun keyShareFor(otherGuardian: String): Result<KeyShare, String> {
         return runBlocking {
-            val url = "$remoteURL/ktrustee/$xcoord/$otherGuardian/keyShareFor"
+            val url = "$remoteURL/ktrustee/$id/keyShareFor/$otherGuardian"
             val response: HttpResponse = client.get(url) {
                 headers {
                     append(HttpHeaders.Accept, "application/json")
@@ -161,7 +162,7 @@ class RemoteKeyTrusteeProxy(
 
     override fun receiveKeyShare(keyShare: KeyShare): Result<Boolean, String> {
         return runBlocking {
-            val url = "$remoteURL/ktrustee/$xcoord/receiveKeyShare"
+            val url = "$remoteURL/ktrustee/$id/receiveKeyShare"
             val response: HttpResponse = client.post(url) {
                 headers {
                     append(HttpHeaders.ContentType, "application/json")
@@ -176,7 +177,7 @@ class RemoteKeyTrusteeProxy(
 
     fun saveState(isJson : Boolean): Result<Boolean, String> {
         return runBlocking {
-            val url = "$remoteURL/ktrustee/$xcoord/saveState/$isJson"
+            val url = "$remoteURL/ktrustee/$id/saveState/$isJson"
             val response: HttpResponse = client.get(url) {
                 headers {
                     if (isSSL) basicAuth("electionguard", certPassword)
@@ -206,17 +207,27 @@ class RemoteKeyTrusteeProxy(
         return publicKeys?.publicKey()?.key ?: throw IllegalStateException()
     }
 
-    override fun keyShare(): ElementModQ {
+    /** The resulting secretKeyShare for this guardian == (P1(ℓ) + P2(ℓ) + · · · + Pn(ℓ)) mod q. spec 2.0.0, eq 65. */
+    override fun secretKeyShare(): ElementModQ {
+        return secretKeyShare!!
+    }
+
+    override fun computeSecretKeyShare(nguardians : Int): Result<ElementModQ, String> {
         return runBlocking {
-            val url = "$remoteURL/ktrustee/$xcoord/keyShare"
+            val url = "$remoteURL/ktrustee/$id/computeSecretKeyShare/$nguardians"
             val response: HttpResponse = client.get(url) {
                 headers {
                     if (isSSL) basicAuth("electionguard", certPassword)
                 }
             }
             println("$id keyShare ${xcoord} = ${response.status}")
-            val keyShareJson : ElementModQJson = response.body()
-            keyShareJson.import(group)
+            if (response.status == HttpStatusCode.OK) {
+                val keyShareJson: ElementModQJson = response.body()
+                secretKeyShare = keyShareJson.import(group)
+                Ok(secretKeyShare!!)
+            } else {
+                Err(response.bodyAsText())
+            }
         }
     }
 

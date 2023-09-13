@@ -4,12 +4,7 @@ import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
 import electionguard.ballot.PlaintextBallot
-import electionguard.core.*
 import electionguard.json2.*
-import electionguard.keyceremony.KeyCeremonyTrusteeIF
-import electionguard.keyceremony.KeyShare
-import electionguard.keyceremony.PublicKeys
-import electionguard.keyceremony.EncryptedKeyShare
 
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -23,6 +18,19 @@ class RemoteEncryptorProxy(
     val client: HttpClient,
     val remoteURL: String,
 ) {
+
+    fun hello(): Boolean {
+        return runBlocking {
+            val url = "$remoteURL/hello"
+            val response: HttpResponse = client.get(url) {
+                headers {
+                    if (isSSL) basicAuth("electionguard", egPassword)
+                }
+            }
+            println("Contact with Server $url = ${response.status}")
+            response.status == HttpStatusCode.OK
+        }
+    }
 
     fun encryptBallot(device: String, ballot: PlaintextBallot): Result<String, String> {
         return runBlocking {

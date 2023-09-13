@@ -1,6 +1,6 @@
 # ElectionGuard-Kotlin-Multiplatform Webapps
 
-_last update 9/11/2023_
+_last update 9/12/2023_
 
 [ElectionGuard-Kotlin-Multiplatform (EKM)](https://github.com/danwallach/electionguard-kotlin-multiplatform) 
 is a multiplatform Kotlin implementation of 
@@ -412,10 +412,11 @@ Usage: RunEgkClientKt options_list
 Options: 
     --inputDir, -in -> Directory containing input election record, for generating test ballots (always required) { String }
     --device, -device [testDevice] -> Device name { String }
-    --serverUrl, -server [http://localhost:11111/egk] -> Server URL { String }
-    --outputDir, -out -> Directory containing output election record, optional for validating { String }
+    --outputDir, -out -> Directory containing output election record, optional for validating (always required) { String }
     --nballots, -nballots [11] -> Number of test ballots to send to server { Int }
-    --sslKeyStore, -keystore -> file path of the keystore file { String }
+    --serverHost, -trusteeHost [localhost] -> hostname of encryption server trustee webapp  { String }
+    --serverPort, -serverPort [11111] -> port of encryption server webapp { Int }
+    --sslKeyStore, -keystore [egKeystore.jks] -> file path of the keystore file { String }
     --keystorePassword, -kpwd -> password for the entire keystore { String }
     --electionguardPassword, -epwd -> password for the electionguard entry { String }
     --help, -h -> Usage info 

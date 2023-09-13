@@ -12,5 +12,7 @@ dependencies {
     implementation("io.ktor:ktor-network-tls-certificates")
     implementation("io.ktor:ktor-server-call-logging")
 
+    testImplementation("io.ktor:ktor-client-content-negotiation")
+    testImplementation("io.ktor:ktor-server-test-host")
     testImplementation("io.ktor:ktor-server-tests")
 }

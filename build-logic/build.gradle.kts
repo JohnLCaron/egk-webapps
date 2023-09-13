@@ -59,6 +59,7 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5:${kotlinVersion}")
     testImplementation("io.mockk:mockk:${mockkVersion}")
 
+    testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
     testImplementation("io.ktor:ktor-server-tests:${ktorVersion}")
 }
 
