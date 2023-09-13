@@ -1,11 +1,9 @@
 package electionguard.webapps.keyceremonytrustee.routes
 
-import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.unwrap
 import com.github.michaelbull.result.unwrapError
-import electionguard.core.ElementModQ
 import electionguard.json2.*
 import electionguard.keyceremony.EncryptedKeyShare
 import electionguard.webapps.keyceremonytrustee.groupContext
@@ -179,23 +177,17 @@ fun Route.trusteeRouting() {
         }
     }
 
-    get("{id}/computeSecretKeyShare/{nguardians}") {
+    //             val url = "$remoteURL/ktrustee/$id/checkComplete"
+    get("{id}/checkComplete") {
         val id = call.parameters["id"]
         val rguardian =
             remoteKeyTrustees.find { it.id == id } ?: return@get call.respondText(
                 "No RemoteKeyTrustee with id= $id",
                 status = HttpStatusCode.NotFound
             )
-        val nguardians = call.parameters["nguardians"] ?: "0"
-        val result = rguardian.computeSecretKeyShare(nguardians.toInt())
-        if (result is Err) {
-            val msg =
-                "RemoteKeyTrustee ${rguardian.id} computeSecretKeyShare failed ${result.unwrapError()}"
-            call.application.environment.log.error(msg)
-            call.respondText(msg, status = HttpStatusCode.BadRequest)
-        } else {
-            call.respond(result.unwrap().publishJson())
-        }
+        println(rguardian)
+        val checkComplete = rguardian.checkComplete()
+        call.respond(if (checkComplete) "true" else "false")
     }
 
     get("{id}/saveState/{isJson?}") {
