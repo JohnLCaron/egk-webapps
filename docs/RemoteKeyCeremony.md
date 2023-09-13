@@ -2,7 +2,7 @@
 
 _last update 9/13/2023_
 
-Also see [OpenDoc API](../encryptserver/src/main/resources/openapi/documentation.yaml)
+Also see [OpenDoc API](../keyceremonytrustee/src/main/resources/openapi/documentation.yaml)
 
 route("/egk/ktrustee") {
 

@@ -1,6 +1,6 @@
 # ElectionGuard-Kotlin-Multiplatform Webapps
 
-_last update 9/12/2023_
+_last update 9/13/2023_
 
 [ElectionGuard-Kotlin-Multiplatform (EKM)](https://github.com/danwallach/electionguard-kotlin-multiplatform) 
 is a multiplatform Kotlin implementation of 
@@ -76,8 +76,8 @@ In production, you may use any working directory and adjust the paths accordingl
 
 The election administrator runs the **keyceremony** program, which orchestrates the 
 _Key Ceremony_ where the secret keys and the _joint election keys_ are generated.
-Each trustee runs a seperate
-**keyceremonytrustee** _process_ that starts up first and then waits for the keyceremony to send it
+
+Each trustee runs a **keyceremonytrustee** _process_ that starts up first and then waits for the keyceremony to send it
 requests. When the Key Ceremony is done, each keyceremonytrustee writes its own secret key to wherever the
 human trustee has configured. This secret key is then used later, when the trustees come together to decrypt the
 election record.
@@ -363,6 +363,9 @@ To use SSL in decryption (see [Using SSL](#using-ssl)):
 
 The Encryption server allows you to run ballot encryption on a
 different machine than where ballots are generated, and/or to call from a non-JVM program.
+
+Also see [Encryption Server REST API](docs/EncryptionServer.md).
+
 
 ### Encryption Server
 

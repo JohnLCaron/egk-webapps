@@ -34,7 +34,7 @@ class RemoteEncryptorProxy(
 
     fun encryptBallot(device: String, ballot: PlaintextBallot): Result<String, String> {
         return runBlocking {
-            val url = "$remoteURL/encryptBallot/$device"
+            val url = "$remoteURL/$device/encryptBallot"
             val response: HttpResponse = client.post(url) {
                 headers {
                     append(HttpHeaders.Accept, "application/json")
@@ -51,7 +51,7 @@ class RemoteEncryptorProxy(
 
     fun castBallot(device: String, ccode: String): Result<Boolean, String> {
         return runBlocking {
-            val url = "$remoteURL/castBallot/$device/$ccode"
+            val url = "$remoteURL/$device/castBallot/$ccode"
             val response: HttpResponse = client.get(url) {
                 headers {
                     append(HttpHeaders.Accept, "application/json")
@@ -71,7 +71,7 @@ class RemoteEncryptorProxy(
 
     fun challengeBallot(device: String, ccode: String): Result<Boolean, String> {
         return runBlocking {
-            val url = "$remoteURL/challengeBallot/$device/$ccode"
+            val url = "$remoteURL/$device/challengeBallot/$ccode"
             val response: HttpResponse = client.get(url) {
                 headers {
                     append(HttpHeaders.Accept, "application/json")
@@ -91,7 +91,7 @@ class RemoteEncryptorProxy(
 
     fun challengeAndDecryptBallot(device: String, ccode: String): Result<PlaintextBallot, String> {
         return runBlocking {
-            val url = "$remoteURL/challengeAndDecryptBallot/$device/$ccode"
+            val url = "$remoteURL/$device/challengeAndDecryptBallot/$ccode"
             val response: HttpResponse = client.get(url) {
                 headers {
                     append(HttpHeaders.Accept, "application/json")
@@ -112,7 +112,7 @@ class RemoteEncryptorProxy(
 
     fun sync(device: String): Result<Boolean, String> {
         return runBlocking {
-            val url = "$remoteURL/sync/$device"
+            val url = "$remoteURL/$device/sync"
             val response: HttpResponse = client.get(url) {
                 headers {
                     append(HttpHeaders.Accept, "application/json")
