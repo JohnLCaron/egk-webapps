@@ -305,7 +305,7 @@ class KeyCeremonyTrusteeTest {
             contentType(ContentType.Application.Json)
             setBody("""{"id":"trustee1","xCoordinate":42,"quorum":3}""")
         }.apply {
-            assertEquals(HttpStatusCode.Created, status)+
+            assertEquals(HttpStatusCode.Created, status)
             assertEquals("RemoteKeyTrustee trustee1 created", bodyAsText())
         }
         myclient.post("/egk/ktrustee") {
