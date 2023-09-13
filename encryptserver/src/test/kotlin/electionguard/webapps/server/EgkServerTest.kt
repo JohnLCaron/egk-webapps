@@ -5,6 +5,7 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.testing.*
+import kotlinx.serialization.json.*
 import kotlin.test.*
 
 import electionguard.ballot.PlaintextBallot
@@ -18,9 +19,6 @@ import electionguard.webapps.server.models.EncryptionService
 import electionguard.webapps.server.plugins.configureRouting
 import electionguard.webapps.server.plugins.configureSerialization
 
-//import io.ktor.client.plugins.contentnegotiation.*
-import kotlinx.serialization.json.*
-
 class EgkServerTest {
     val inputDir = "../testInput/chained"
     val outputDir = "testOut/encrypt/EgkServerTest"
@@ -32,6 +30,20 @@ class EgkServerTest {
         val electionInit = electionRecord.electionInit()!!
         val publisher = makePublisher(outputDir, true, electionRecord.isJson())
         publisher.writeElectionInitialized(electionInit)
+    }
+
+    @Test
+    fun testHello() = testApplication {
+        EncryptionService.initialize(inputDir, outputDir)
+
+        application {
+            configureRouting()
+        }
+
+        client.get("/egk/hello").apply {
+            assertEquals(HttpStatusCode.OK, status)
+            assertEquals("Hello!", bodyAsText())
+        }
     }
 
     @Test
@@ -92,9 +104,9 @@ class EgkServerTest {
         }
 
         val myclient = createClient {
-            //install(ContentNegotiation) {
-            //    json()
-            //}
+            install(io.ktor.client.plugins.contentnegotiation.ContentNegotiation) {
+                json()
+            }
         }
 
         val encryptionService = EncryptionService.getInstance()
@@ -112,7 +124,7 @@ class EgkServerTest {
                 println(" responseJson cc=${responseJson.confirmationCode}")
 
                 myclient.get("/egk/castBallot/device42/${responseJson.confirmationCode}").apply {
-                    // assertEquals(HttpStatusCode.OK, status)
+                    assertEquals(HttpStatusCode.OK, status)
                     println(" castBallot state = $status body=${bodyAsText()}")
                 }
 

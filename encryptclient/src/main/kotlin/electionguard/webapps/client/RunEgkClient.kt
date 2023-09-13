@@ -116,6 +116,15 @@ fun main(args: Array<String>) {
         }
     }
     val proxy = RemoteEncryptorProxy(client, serverUrl)
+    try {
+        if (!proxy.hello()) {
+            println("Problem with server at $serverUrl - exit")
+            return
+        }
+    } catch (t: Throwable) {
+        println("Server at $serverUrl is not running - exit")
+        return
+    }
 
     val group = productionGroup()
     val electionRecord = readElectionRecord(group, inputDir)

@@ -17,6 +17,11 @@ import electionguard.webapps.server.models.EncryptionService
 fun Route.serverRouting() {
     val encryptionService = EncryptionService.getInstance()
 
+    get("hello") {
+        println("HTTP version is ${call.request.httpVersion}")
+        call.respondText("Hello!", status = HttpStatusCode.OK)
+    }
+
     post("encryptBallot/{device}") {
         val device = call.parameters["device"] ?: return@post call.respondText(
             "Missing device",

@@ -22,7 +22,7 @@ import java.security.KeyStore
 private var ksPassword = ""
 private var egPassword = ""
 var isSSL = false
-var trusteeDir = ""
+var trusteeDir = "tmp"
 val groupContext = productionGroup(PowRadixOption.HIGH_MEMORY_USE, ProductionMode.Mode4096)
 
 fun main(args: Array<String>) {
