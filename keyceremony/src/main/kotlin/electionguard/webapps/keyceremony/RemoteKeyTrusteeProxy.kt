@@ -28,7 +28,7 @@ class RemoteKeyTrusteeProxy(
     val xcoord: Int,
     val nguardians: Int,
     val quorum: Int,
-    val egPassword: String,
+    val egPassword: String = "",
 ) : KeyCeremonyTrusteeIF {
     var publicKeys : PublicKeys? = null
 
@@ -192,15 +192,15 @@ class RemoteKeyTrusteeProxy(
         }
     }
 
-    fun saveState(isJson : Boolean): Result<Boolean, String> {
+    fun saveState(): Result<Boolean, String> {
         return runBlocking {
-            val url = "$remoteURL/ktrustee/$id/saveState/$isJson"
+            val url = "$remoteURL/ktrustee/$id/saveState"
             val response: HttpResponse = client.get(url) {
                 headers {
                     if (isSSL) basicAuth("electionguard", egPassword)
                 }
             }
-            println("$id saveState isJson=$isJson status=${response.status}")
+            println("$id saveState status=${response.status}")
             if (response.status == HttpStatusCode.OK) Ok(true) else Err(response.toString())
         }
     }

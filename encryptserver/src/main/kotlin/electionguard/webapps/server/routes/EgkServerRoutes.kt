@@ -22,7 +22,7 @@ fun Route.serverRouting() {
         call.respondText("Hello!", status = HttpStatusCode.OK)
     }
 
-    post("encryptBallot/{device}") {
+    post("{device}/encryptBallot") {
         val device = call.parameters["device"] ?: return@post call.respondText(
             "Missing device",
             status = HttpStatusCode.BadRequest
@@ -45,7 +45,7 @@ fun Route.serverRouting() {
         }
     }
 
-    get("castBallot/{device}/{ccode}") {
+    get("{device}/castBallot/{ccode}") {
         val device = call.parameters["device"] ?: return@get call.respondText(
             "Missing device",
             status = HttpStatusCode.BadRequest
@@ -68,7 +68,7 @@ fun Route.serverRouting() {
         }
     }
 
-    get("challengeBallot/{device}/{ccode}") {
+    get("{device}/challengeBallot/{ccode}") {
         val device = call.parameters["device"] ?: return@get call.respondText(
             "Missing device",
             status = HttpStatusCode.BadRequest
@@ -80,7 +80,7 @@ fun Route.serverRouting() {
         val result = encryptionService.submit(device, ccode, EncryptedBallot.BallotState.SPOILED)
         if (result is Ok) {
             call.respondText(
-                "EgkServer spoil ccode=${ccode} success",
+                "EgkServer challenge ccode=${ccode} success",
                 status = HttpStatusCode.OK
             )
         } else {
@@ -91,7 +91,7 @@ fun Route.serverRouting() {
         }
     }
 
-    get("challengeAndDecryptBallot/{device}/{ccode}") {
+    get("{device}/challengeAndDecryptBallot/{ccode}") {
         val device = call.parameters["device"] ?: return@get call.respondText(
             "Missing device",
             status = HttpStatusCode.BadRequest
@@ -114,7 +114,7 @@ fun Route.serverRouting() {
         }
     }
 
-    get("sync/{device}") {
+    get("{device}/sync") {
         val device = call.parameters["device"] ?: return@get call.respondText(
             "Missing device",
             status = HttpStatusCode.BadRequest

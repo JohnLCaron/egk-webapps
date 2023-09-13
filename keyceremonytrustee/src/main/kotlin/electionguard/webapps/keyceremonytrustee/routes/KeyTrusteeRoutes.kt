@@ -7,6 +7,7 @@ import com.github.michaelbull.result.unwrapError
 import electionguard.json2.*
 import electionguard.keyceremony.EncryptedKeyShare
 import electionguard.webapps.keyceremonytrustee.groupContext
+import electionguard.webapps.keyceremonytrustee.isJson
 import electionguard.webapps.keyceremonytrustee.models.RemoteKeyTrustee
 import electionguard.webapps.keyceremonytrustee.models.remoteKeyTrustees
 import electionguard.webapps.keyceremonytrustee.trusteeDir
@@ -177,7 +178,6 @@ fun Route.trusteeRouting() {
         }
     }
 
-    //             val url = "$remoteURL/ktrustee/$id/checkComplete"
     get("{id}/checkComplete") {
         val id = call.parameters["id"]
         val rguardian =
@@ -190,15 +190,13 @@ fun Route.trusteeRouting() {
         call.respond(if (checkComplete) "true" else "false")
     }
 
-    get("{id}/saveState/{isJson?}") {
+    get("{id}/saveState") {
         val id = call.parameters["id"]
         val rguardian =
             remoteKeyTrustees.find { it.id == id } ?: return@get call.respondText(
                 "No RemoteKeyTrustee with id= $id",
                 status = HttpStatusCode.NotFound
             )
-        val isJsonS = call.parameters["isJson"] ?: "true"
-        val isJson = isJsonS == "true"
         val result = rguardian.saveState(trusteeDir, isJson)
         if (result is Ok) {
             call.respondText(

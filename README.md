@@ -1,6 +1,6 @@
 # ElectionGuard-Kotlin-Multiplatform Webapps
 
-_last update 9/12/2023_
+_last update 9/13/2023_
 
 [ElectionGuard-Kotlin-Multiplatform (EKM)](https://github.com/danwallach/electionguard-kotlin-multiplatform) 
 is a multiplatform Kotlin implementation of 
@@ -76,8 +76,8 @@ In production, you may use any working directory and adjust the paths accordingl
 
 The election administrator runs the **keyceremony** program, which orchestrates the 
 _Key Ceremony_ where the secret keys and the _joint election keys_ are generated.
-Each trustee runs a seperate
-**keyceremonytrustee** _process_ that starts up first and then waits for the keyceremony to send it
+
+Each trustee runs a **keyceremonytrustee** _process_ that starts up first and then waits for the keyceremony to send it
 requests. When the Key Ceremony is done, each keyceremonytrustee writes its own secret key to wherever the
 human trustee has configured. This secret key is then used later, when the trustees come together to decrypt the
 election record.
@@ -86,6 +86,8 @@ You must first generate the _Manifest_ and _Election Configuration_ files, as de
 [Create an Election Configuration](https://github.com/votingworks/electionguard-kotlin-multiplatform/blob/main/docs/CommandLineInterface.md#create-an-election-configuration).
 The output of that process give you both the **trusteeDir** for the keyceremonytrustee, and the **inputDir** for the
 keyceremony.
+
+Also see [Remote Ceremony REST API](docs/RemoteKeyCeremony.md).
 
 ### The keyceremonytrustee program
 
@@ -96,14 +98,13 @@ soon add the "each trustee in its own process" production workflow)_
 Usage: RunKeyCeremonyTrustee options_list
 Options: 
     --trustees, -trusteeDir -> Directory to write output trustee record (must be private)) (always required) { String }
-    --serverPort, -port [11183] -> listen on this port, default = 11183 { Int }
+    --serverPort, -port [11183] -> listen on this port { Int }
+    --useJson, -json [true] -> serialize to Json or Protobuf 
     --sslKeyStore, -keystore [egKeystore.jks] -> file path of the keystore file { String }
     --keystorePassword, -kpwd -> password for the entire keystore { String }
     --electionguardPassword, -epwd -> password for the electionguard entry { String }
     --help, -h -> Usage info 
 ````
-
-To use SSL, see [Using SSL](#using-ssl)
 
 Example:
 
@@ -142,13 +143,14 @@ Start up the keyceremonytrustee program first. Then:
 ````
 Usage: RunRemoteKeyCeremony options_list
 Options: 
-    --inputDir, -in -> Directory containing input ElectionConfig record { String }
+    --inputDir, -in -> Directory containing input ElectionConfig record (always required) { String }
     --outputDir, -out -> Directory to write output ElectionInitialized record (always required) { String }
-    --remoteUrl, -remoteUrl [http://localhost:11183/egk] -> URL of keyceremony trustee webapp  { String }
-    --sslKeyStore, -keystore -> file path of the keystore file { String }
-    --keystorePassword, -kpwd -> password for the entire keystore { String }
+    --serverHost, -trusteeHost [localhost] -> hostname of keyceremony trustee webapp  { String }
+    --serverPort, -serverPort [11183] -> port of keyceremony trustee webapp  { Int }
+    --createdBy, -createdBy -> who created (for ElectionInitialized metadata) { String }
+    --sslKeyStore, -keystore [egKeystore.jks] -> file path of the keystore file { String }
+    --keystorePassword, -kpwd -> password for the keystore file { String }
     --electionguardPassword, -epwd -> password for the electionguard entry { String }
-    --createdBy, -createdBy -> who created for ElectionInitialized metadata { String }
     --help, -h -> Usage info 
 ````
 
@@ -361,6 +363,9 @@ To use SSL in decryption (see [Using SSL](#using-ssl)):
 
 The Encryption server allows you to run ballot encryption on a
 different machine than where ballots are generated, and/or to call from a non-JVM program.
+
+Also see [Encryption Server REST API](docs/EncryptionServer.md).
+
 
 ### Encryption Server
 

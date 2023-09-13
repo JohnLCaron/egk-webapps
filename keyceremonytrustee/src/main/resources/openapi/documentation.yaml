@@ -8,8 +8,7 @@ servers:
 paths:
   /egk/ktrustee:
     get:
-      description: "https://ktor.io/docs/basic.html <br> authenticate(\"auth-basic\"\
-        ) {"
+      description: ""
       responses:
         "200":
           description: "OK"
@@ -47,7 +46,32 @@ paths:
               examples:
                 Example#1:
                   value: ""
-  /egk/ktrustee/{id}/{from}/encryptedKeyShareFor:
+  /egk/ktrustee/{id}/checkComplete:
+    get:
+      description: "val url = \"$remoteURL/ktrustee/$id/checkComplete\""
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "404":
+          description: "Not Found"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: ""
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                type: "string"
+  /egk/ktrustee/{id}/encryptedKeyShareFor/{forTrustee}:
     get:
       description: ""
       parameters:
@@ -56,12 +80,21 @@ paths:
         required: true
         schema:
           type: "string"
-      - name: "from"
+      - name: "forTrustee"
         in: "path"
         required: true
         schema:
           type: "string"
       responses:
+        "404":
+          description: "Not Found"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: ""
         "400":
           description: "Bad Request"
           content:
@@ -72,25 +105,14 @@ paths:
                 Example#1:
                   value: ""
                 Example#2:
-                  value: "Missing from id"
-                Example#3:
-                  value: "Missing id"
-        "404":
-          description: "Not Found"
-          content:
-            text/plain:
-              schema:
-                type: "string"
-              examples:
-                Example#1:
-                  value: ""
+                  value: "Missing 'forTrustee' id"
         "200":
           description: "OK"
           content:
             '*/*':
               schema:
                 $ref: "#/components/schemas/EncryptedKeyShareJson"
-  /egk/ktrustee/{id}/{from}/keyShareFor:
+  /egk/ktrustee/{id}/keyShareFor/{forTrustee}:
     get:
       description: ""
       parameters:
@@ -99,12 +121,21 @@ paths:
         required: true
         schema:
           type: "string"
-      - name: "from"
+      - name: "forTrustee"
         in: "path"
         required: true
         schema:
           type: "string"
       responses:
+        "404":
+          description: "Not Found"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: ""
         "400":
           description: "Bad Request"
           content:
@@ -115,58 +146,13 @@ paths:
                 Example#1:
                   value: ""
                 Example#2:
-                  value: "Missing from id"
-                Example#3:
-                  value: "Missing id"
-        "404":
-          description: "Not Found"
-          content:
-            text/plain:
-              schema:
-                type: "string"
-              examples:
-                Example#1:
-                  value: ""
+                  value: "Missing 'forTrustee' id"
         "200":
           description: "OK"
           content:
             '*/*':
               schema:
                 $ref: "#/components/schemas/KeyShareJson"
-  /egk/ktrustee/{id}/keyShare:
-    get:
-      description: ""
-      parameters:
-      - name: "id"
-        in: "path"
-        required: true
-        schema:
-          type: "string"
-      responses:
-        "400":
-          description: "Bad Request"
-          content:
-            text/plain:
-              schema:
-                type: "string"
-              examples:
-                Example#1:
-                  value: "Missing id"
-        "404":
-          description: "Not Found"
-          content:
-            text/plain:
-              schema:
-                type: "string"
-              examples:
-                Example#1:
-                  value: ""
-        "200":
-          description: "OK"
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/ElementModQJson"
   /egk/ktrustee/{id}/publicKeys:
     get:
       description: ""
@@ -177,15 +163,6 @@ paths:
         schema:
           type: "string"
       responses:
-        "400":
-          description: "Bad Request"
-          content:
-            text/plain:
-              schema:
-                type: "string"
-              examples:
-                Example#1:
-                  value: "Missing id"
         "404":
           description: "Not Found"
           content:
@@ -226,17 +203,6 @@ paths:
               $ref: "#/components/schemas/EncryptedKeyShareJson"
         required: true
       responses:
-        "400":
-          description: "Bad Request"
-          content:
-            text/plain:
-              schema:
-                type: "string"
-              examples:
-                Example#1:
-                  value: ""
-                Example#2:
-                  value: "Missing id"
         "404":
           description: "Not Found"
           content:
@@ -248,6 +214,15 @@ paths:
                   value: ""
         "200":
           description: "OK"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: ""
+        "400":
+          description: "Bad Request"
           content:
             text/plain:
               schema:
@@ -271,21 +246,6 @@ paths:
               $ref: "#/components/schemas/KeyShareJson"
         required: true
       responses:
-        "400":
-          description: "Bad Request"
-          content:
-            text/plain:
-              schema:
-                type: "string"
-              examples:
-                Example#1:
-                  description: ""
-                  value: "null"
-                Example#2:
-                  description: ""
-                  value: "null"
-                Example#3:
-                  value: "Missing id"
         "404":
           description: "Not Found"
           content:
@@ -304,6 +264,19 @@ paths:
               examples:
                 Example#1:
                   value: ""
+        "400":
+          description: "Bad Request"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  description: ""
+                  value: "null"
+                Example#2:
+                  description: ""
+                  value: "null"
   /egk/ktrustee/{id}/receivePublicKeys:
     post:
       description: ""
@@ -320,15 +293,6 @@ paths:
               $ref: "#/components/schemas/PublicKeysJson"
         required: true
       responses:
-        "400":
-          description: "Bad Request"
-          content:
-            text/plain:
-              schema:
-                type: "string"
-              examples:
-                Example#1:
-                  value: "Missing id"
         "404":
           description: "Not Found"
           content:
@@ -358,7 +322,7 @@ paths:
                   value: ""
                 Example#2:
                   value: ""
-  /egk/ktrustee/{id}/saveState/{isJson}:
+  /egk/ktrustee/{id}/saveState:
     get:
       description: ""
       parameters:
@@ -367,21 +331,7 @@ paths:
         required: true
         schema:
           type: "string"
-      - name: "isJson"
-        in: "path"
-        required: true
-        schema:
-          type: "string"
       responses:
-        "400":
-          description: "Bad Request"
-          content:
-            text/plain:
-              schema:
-                type: "string"
-              examples:
-                Example#1:
-                  value: "Missing id"
         "404":
           description: "Not Found"
           content:
@@ -417,6 +367,9 @@ components:
         id:
           type: "string"
         xCoordinate:
+          type: "integer"
+          format: "int32"
+        nguardians:
           type: "integer"
           format: "int32"
         quorum:
