@@ -9,6 +9,7 @@ import electionguard.json2.PublicKeysJson
 import electionguard.json2.import
 import electionguard.keyceremony.EncryptedKeyShare
 import electionguard.keyceremony.KeyShare
+import electionguard.webapps.keyceremonytrustee.models.remoteKeyTrustees
 import electionguard.webapps.keyceremonytrustee.plugins.configureRouting
 import electionguard.webapps.keyceremonytrustee.plugins.configureSerialization
 import io.ktor.client.call.*
@@ -24,6 +25,7 @@ class KeyCeremonyTrusteeTest {
 
     @Test
     fun testGetEmptyTrusteeList() = testApplication {
+        remoteKeyTrustees.clear()
         application {
             configureRouting()
             configureSerialization()
@@ -35,15 +37,15 @@ class KeyCeremonyTrusteeTest {
 
     @Test
     fun testCreateTrustee() = testApplication {
+        remoteKeyTrustees.clear()
         application {
             configureRouting()
             configureSerialization()
         }
 
-        val body = """{"id":"trustee1","xCoordinate":42,"quorum":3}"""
         client.post("/egk/ktrustee") {
             contentType(ContentType.Application.Json)
-            setBody(body)
+            setBody(makeTrusteeJson(1))
         }.apply {
             assertEquals(HttpStatusCode.Created, status)
             assertEquals("RemoteKeyTrustee trustee1 created", bodyAsText())
@@ -56,15 +58,15 @@ class KeyCeremonyTrusteeTest {
 
     @Test
     fun testGetTrusteePublicKeys() = testApplication {
+        remoteKeyTrustees.clear()
         application {
             configureRouting()
             configureSerialization()
         }
 
-        val body = """{"id":"trustee1","xCoordinate":42,"quorum":3}"""
         client.post("/egk/ktrustee") {
             contentType(ContentType.Application.Json)
-            setBody(body)
+            setBody(makeTrusteeJson(1))
         }.apply {
             assertEquals(HttpStatusCode.Created, status)
             assertEquals("RemoteKeyTrustee trustee1 created", bodyAsText())
@@ -72,21 +74,21 @@ class KeyCeremonyTrusteeTest {
 
         client.get("/egk/ktrustee/trustee1/publicKeys").apply {
             assertEquals(HttpStatusCode.OK, status)
-            assertTrue(bodyAsText().startsWith("""{"guardianId":"trustee1","guardianXCoordinate":42,"coefficientProofs":[{"public_key":"""))
+            assertTrue(bodyAsText().startsWith("""{"guardianId":"trustee1","guardianXCoordinate":1,"coefficientProofs":[{"public_key":"""))
         }
     }
 
     @Test
     fun testGetBadPublicKeys() = testApplication {
+        remoteKeyTrustees.clear()
         application {
             configureRouting()
             configureSerialization()
         }
 
-        val body = """{"id":"trustee1","xCoordinate":42,"quorum":3}"""
         client.post("/egk/ktrustee") {
             contentType(ContentType.Application.Json)
-            setBody(body)
+            setBody(makeTrusteeJson(1))
         }.apply {
             assertEquals(HttpStatusCode.Created, status)
             assertEquals("RemoteKeyTrustee trustee1 created", bodyAsText())
@@ -100,6 +102,7 @@ class KeyCeremonyTrusteeTest {
 
     @Test
     fun testReceivePublicKeys() = testApplication {
+        remoteKeyTrustees.clear()
         application {
             configureRouting()
             configureSerialization()
@@ -112,19 +115,17 @@ class KeyCeremonyTrusteeTest {
         }
 
         // create trustees 1 and 2
-        val body1 = """{"id":"trustee1","xCoordinate":42,"quorum":3}"""
         myclient.post("/egk/ktrustee") {
             contentType(ContentType.Application.Json)
-            setBody(body1)
+            setBody(makeTrusteeJson(1))
         }.apply {
             assertEquals(HttpStatusCode.Created, status)
             assertEquals("RemoteKeyTrustee trustee1 created", bodyAsText())
         }
 
-        val body2 = """{"id":"trustee2","xCoordinate":43,"quorum":3}"""
         myclient.post("/egk/ktrustee") {
             contentType(ContentType.Application.Json)
-            setBody(body2)
+            setBody(makeTrusteeJson(2))
         }.apply {
             assertEquals(HttpStatusCode.Created, status)
             assertEquals("RemoteKeyTrustee trustee2 created", bodyAsText())
@@ -145,53 +146,9 @@ class KeyCeremonyTrusteeTest {
         }
     }
 
-    /*
-     get("{id}/encryptedKeyShareFor/{forTrustee}") {
-        val id = call.parameters["id"]
-        val rguardian =
-            remoteKeyTrustees.find { it.id == id } ?: return@get call.respondText(
-                "No RemoteKeyTrustee with id= $id",
-                status = HttpStatusCode.NotFound
-            )
-        val forTrustee = call.parameters["forTrustee"] ?: return@get call.respondText(
-            "Missing 'forTrustee' id",
-            status = HttpStatusCode.BadRequest
-        )
-        val result: Result<EncryptedKeyShare, String> = rguardian.encryptedKeyShareFor(forTrustee)
-        if (result is Ok) {
-            call.respond(result.unwrap().publishJson())
-        } else {
-            call.respondText(
-                "RemoteKeyTrustee ${rguardian.id} encryptedKeyShareFor forTrustee ${forTrustee} failed ${result.unwrapError()}",
-                status = HttpStatusCode.BadRequest
-            )
-        }
-    }
-
-    override fun encryptedKeyShareFor(otherGuardian: String): Result<EncryptedKeyShare, String> {
-        return runBlocking {
-            val url = "$remoteURL/ktrustee/$id/encryptedKeyShareFor/$otherGuardian"
-            val response: HttpResponse = client.get(url) {
-                headers {
-                    append(HttpHeaders.Accept, "application/json")
-                    if (isSSL) basicAuth("electionguard", certPassword)
-                }
-            }
-            if (response.status != HttpStatusCode.OK) {
-                println("response.status for $url = ${response.status}")
-                Err("$url error = ${response.status}")
-            } else {
-                val encryptedKeyShareJson: EncryptedKeyShareJson = response.body()
-                val encryptedKeyShare: EncryptedKeyShare? = encryptedKeyShareJson.import(group)
-                println("$id encryptedKeyShareFor ${encryptedKeyShare?.secretShareFor} = ${response.status}")
-                if (encryptedKeyShare == null) Err("EncryptedKeyShare") else Ok(encryptedKeyShare)
-            }
-        }
-    }
-     */
-
     @Test
     fun testGetEncryptedKeyShareFor() = testApplication {
+        remoteKeyTrustees.clear()
         application {
             configureRouting()
             configureSerialization()
@@ -205,21 +162,21 @@ class KeyCeremonyTrusteeTest {
         // create trustees
         myclient.post("/egk/ktrustee") {
             contentType(ContentType.Application.Json)
-            setBody("""{"id":"trustee1","xCoordinate":42,"quorum":3}""")
+            setBody(makeTrusteeJson(1))
         }.apply {
             assertEquals(HttpStatusCode.Created, status)
             assertEquals("RemoteKeyTrustee trustee1 created", bodyAsText())
         }
         myclient.post("/egk/ktrustee") {
             contentType(ContentType.Application.Json)
-            setBody("""{"id":"trustee2","xCoordinate":43,"quorum":3}""")
+            setBody(makeTrusteeJson(2))
         }.apply {
             assertEquals(HttpStatusCode.Created, status)
             assertEquals("RemoteKeyTrustee trustee2 created", bodyAsText())
         }
         myclient.post("/egk/ktrustee") {
             contentType(ContentType.Application.Json)
-            setBody("""{"id":"trustee3","xCoordinate":44,"quorum":3}""")
+            setBody(makeTrusteeJson(3))
         }.apply {
             assertEquals(HttpStatusCode.Created, status)
             assertEquals("RemoteKeyTrustee trustee3 created", bodyAsText())
@@ -244,52 +201,12 @@ class KeyCeremonyTrusteeTest {
         val encryptedKeyShareJson: EncryptedKeyShareJson = response2.body()
         val encryptedKeyShare: EncryptedKeyShare? = encryptedKeyShareJson.import(group)
         println("---> trustee2's encryptedKeyShareFor trustee1 = ${encryptedKeyShare}")
-        assertTrue(encryptedKeyShare.toString().startsWith("EncryptedKeyShare(ownerXcoord=43, polynomialOwner=trustee2, secretShareFor=trustee1, encryptedCoordinate=HashedElGamalCiphertext(c0="))
+        assertTrue(encryptedKeyShare.toString().startsWith("EncryptedKeyShare(ownerXcoord=2, polynomialOwner=trustee2, secretShareFor=trustee1, encryptedCoordinate=HashedElGamalCiphertext(c0="))
     }
 
-    /*
-    post("{id}/receiveEncryptedKeyShare") {
-        val id = call.parameters["id"]
-        val rguardian =
-            remoteKeyTrustees.find { it.id == id } ?: return@post call.respondText(
-                "No RemoteKeyTrustee with id= $id",
-                status = HttpStatusCode.NotFound
-            )
-        val secretShare = call.receive<EncryptedKeyShareJson>()
-        val result = rguardian.receiveEncryptedKeyShare(secretShare.import(groupContext))
-        if (result is Ok) {
-            call.respondText(
-                "RemoteKeyTrustee ${rguardian.id} receiveEncryptedKeyShare correctly",
-                status = HttpStatusCode.OK
-            )
-        } else {
-            call.respondText(
-                "RemoteKeyTrustee ${rguardian.id} receiveEncryptedKeyShare failed ${result.unwrapError()}",
-                status = HttpStatusCode.BadRequest
-            )
-        }
-    }
-
-    override fun receiveEncryptedKeyShare(share: EncryptedKeyShare?): Result<Boolean, String> {
-        if (share == null) {
-            return Err("$id receiveEncryptedKeyShare sent null share")
-        }
-        return runBlocking {
-            val url = "$remoteURL/ktrustee/$id/receiveEncryptedKeyShare"
-            val response: HttpResponse = client.post(url) {
-                headers {
-                    append(HttpHeaders.ContentType, "application/json")
-                    if (isSSL) basicAuth("electionguard", certPassword)
-                }
-                setBody(share.publishJson())
-            }
-            println("$id receiveEncryptedKeyShare from ${share.polynomialOwner} = ${response.status}")
-            if (response.status == HttpStatusCode.OK) Ok(true) else Err(response.toString())
-        }
-    }
-     */
     @Test
     fun testReceiveEncryptedKeyShareMissingPublicKey() = testApplication {
+        remoteKeyTrustees.clear()
         application {
             configureRouting()
             configureSerialization()
@@ -303,21 +220,21 @@ class KeyCeremonyTrusteeTest {
         // create trustees
         myclient.post("/egk/ktrustee") {
             contentType(ContentType.Application.Json)
-            setBody("""{"id":"trustee1","xCoordinate":42,"quorum":3}""")
+            setBody(makeTrusteeJson(1))
         }.apply {
             assertEquals(HttpStatusCode.Created, status)
             assertEquals("RemoteKeyTrustee trustee1 created", bodyAsText())
         }
         myclient.post("/egk/ktrustee") {
             contentType(ContentType.Application.Json)
-            setBody("""{"id":"trustee2","xCoordinate":43,"quorum":3}""")
+            setBody(makeTrusteeJson(2))
         }.apply {
             assertEquals(HttpStatusCode.Created, status)
             assertEquals("RemoteKeyTrustee trustee2 created", bodyAsText())
         }
         myclient.post("/egk/ktrustee") {
             contentType(ContentType.Application.Json)
-            setBody("""{"id":"trustee3","xCoordinate":44,"quorum":3}""")
+            setBody(makeTrusteeJson(3))
         }.apply {
             assertEquals(HttpStatusCode.Created, status)
             assertEquals("RemoteKeyTrustee trustee3 created", bodyAsText())
@@ -342,7 +259,7 @@ class KeyCeremonyTrusteeTest {
         val encryptedKeyShareJson: EncryptedKeyShareJson = response2.body()
         val encryptedKeyShare: EncryptedKeyShare? = encryptedKeyShareJson.import(group)
         println("---> trustee2's encryptedKeyShareFor trustee1 = ${encryptedKeyShare}")
-        assertTrue(encryptedKeyShare.toString().startsWith("EncryptedKeyShare(ownerXcoord=43, polynomialOwner=trustee2, secretShareFor=trustee1, encryptedCoordinate=HashedElGamalCiphertext(c0="))
+        assertTrue(encryptedKeyShare.toString().startsWith("EncryptedKeyShare(ownerXcoord=2, polynomialOwner=trustee2, secretShareFor=trustee1, encryptedCoordinate=HashedElGamalCiphertext(c0="))
 
         // send that to trustee1
         //     post("{id}/receiveEncryptedKeyShare") {
@@ -357,6 +274,7 @@ class KeyCeremonyTrusteeTest {
 
     @Test
     fun testReceiveEncryptedKeyShare() = testApplication {
+        remoteKeyTrustees.clear()
         application {
             configureRouting()
             configureSerialization()
@@ -370,21 +288,21 @@ class KeyCeremonyTrusteeTest {
         // create trustees
         myclient.post("/egk/ktrustee") {
             contentType(ContentType.Application.Json)
-            setBody("""{"id":"trustee1","xCoordinate":42,"quorum":3}""")
+            setBody(makeTrusteeJson(1))
         }.apply {
             assertEquals(HttpStatusCode.Created, status)
             assertEquals("RemoteKeyTrustee trustee1 created", bodyAsText())
         }
         myclient.post("/egk/ktrustee") {
             contentType(ContentType.Application.Json)
-            setBody("""{"id":"trustee2","xCoordinate":43,"quorum":3}""")
+            setBody(makeTrusteeJson(2))
         }.apply {
             assertEquals(HttpStatusCode.Created, status)
             assertEquals("RemoteKeyTrustee trustee2 created", bodyAsText())
         }
         myclient.post("/egk/ktrustee") {
             contentType(ContentType.Application.Json)
-            setBody("""{"id":"trustee3","xCoordinate":44,"quorum":3}""")
+            setBody(makeTrusteeJson(3))
         }.apply {
             assertEquals(HttpStatusCode.Created, status)
             assertEquals("RemoteKeyTrustee trustee3 created", bodyAsText())
@@ -420,7 +338,7 @@ class KeyCeremonyTrusteeTest {
         val encryptedKeyShareJson: EncryptedKeyShareJson = responseShare.body()
         val encryptedKeyShare: EncryptedKeyShare? = encryptedKeyShareJson.import(group)
         println("---> trustee2's encryptedKeyShareFor trustee1 = ${encryptedKeyShare}")
-        assertTrue(encryptedKeyShare.toString().startsWith("EncryptedKeyShare(ownerXcoord=43, polynomialOwner=trustee2, secretShareFor=trustee1, encryptedCoordinate=HashedElGamalCiphertext(c0="))
+        assertTrue(encryptedKeyShare.toString().startsWith("EncryptedKeyShare(ownerXcoord=2, polynomialOwner=trustee2, secretShareFor=trustee1, encryptedCoordinate=HashedElGamalCiphertext(c0="))
 
         // send that to trustee1
         //     post("{id}/receiveEncryptedKeyShare") {
@@ -434,7 +352,8 @@ class KeyCeremonyTrusteeTest {
     }
 
     @Test
-    fun testKeyShareError() = testApplication {
+    fun testCompleteFalse() = testApplication {
+        remoteKeyTrustees.clear()
         application {
             configureRouting()
             configureSerialization()
@@ -448,14 +367,14 @@ class KeyCeremonyTrusteeTest {
         // create trustees
         myclient.post("/egk/ktrustee") {
             contentType(ContentType.Application.Json)
-            setBody("""{"id":"trustee1","xCoordinate":42,"quorum":3}""")
+            setBody(makeTrusteeJson(1))
         }.apply {
             assertEquals(HttpStatusCode.Created, status)
             assertEquals("RemoteKeyTrustee trustee1 created", bodyAsText())
         }
         myclient.post("/egk/ktrustee") {
             contentType(ContentType.Application.Json)
-            setBody("""{"id":"trustee2","xCoordinate":43,"quorum":3}""")
+            setBody(makeTrusteeJson(2))
         }.apply {
             assertEquals(HttpStatusCode.Created, status)
             assertEquals("RemoteKeyTrustee trustee2 created", bodyAsText())
@@ -491,7 +410,7 @@ class KeyCeremonyTrusteeTest {
         val encryptedKeyShareJson: EncryptedKeyShareJson = responseShare.body()
         val encryptedKeyShare: EncryptedKeyShare? = encryptedKeyShareJson.import(group)
         println("---> trustee2's encryptedKeyShareFor trustee1 = ${encryptedKeyShare}")
-        assertTrue(encryptedKeyShare.toString().startsWith("EncryptedKeyShare(ownerXcoord=43, polynomialOwner=trustee2, secretShareFor=trustee1, encryptedCoordinate=HashedElGamalCiphertext(c0="))
+        assertTrue(encryptedKeyShare.toString().startsWith("EncryptedKeyShare(ownerXcoord=2, polynomialOwner=trustee2, secretShareFor=trustee1, encryptedCoordinate=HashedElGamalCiphertext(c0="))
 
         // send that to trustee1
         //     post("{id}/receiveEncryptedKeyShare") {
@@ -503,18 +422,19 @@ class KeyCeremonyTrusteeTest {
             assertEquals("RemoteKeyTrustee trustee1 receiveEncryptedKeyShare from polynomial owner trustee2 correctly", bodyAsText())
         }
 
-        // try to get trsutee1 key share with not enough shares
-        //     get("{id}/computeSecretKeyShare/{nguardians}") {
-        myclient.get("/egk/ktrustee/trustee1/computeSecretKeyShare/3") {
+        // not enough shares
+        // val url = "$remoteURL/ktrustee/$id/checkComplete"
+        myclient.get("/egk/ktrustee/trustee1/checkComplete") {
             contentType(ContentType.Application.Json)
         }.apply {
-            assertEquals("RemoteKeyTrustee trustee1 computeSecretKeyShare failed requires nguardians 3 but have 2 shares", bodyAsText())
-            assertEquals(HttpStatusCode.BadRequest, status)
+            assertEquals("false", bodyAsText())
+            assertEquals(HttpStatusCode.OK, status)
         }
     }
 
     @Test
-    fun testKeyShare() = testApplication {
+    fun testCompleteTrue() = testApplication {
+        remoteKeyTrustees.clear()
         application {
             configureRouting()
             configureSerialization()
@@ -528,14 +448,14 @@ class KeyCeremonyTrusteeTest {
         // create 3 trustees
         myclient.post("/egk/ktrustee") {
             contentType(ContentType.Application.Json)
-            setBody("""{"id":"trustee1","xCoordinate":42,"quorum":3}""")
+            setBody(makeTrusteeJson(1, 2))
         }.apply {
             assertEquals(HttpStatusCode.Created, status)
             assertEquals("RemoteKeyTrustee trustee1 created", bodyAsText())
         }
         myclient.post("/egk/ktrustee") {
             contentType(ContentType.Application.Json)
-            setBody("""{"id":"trustee2","xCoordinate":43,"quorum":3}""")
+            setBody(makeTrusteeJson(2, 2))
         }.apply {
             assertEquals(HttpStatusCode.Created, status)
             assertEquals("RemoteKeyTrustee trustee2 created", bodyAsText())
@@ -565,28 +485,42 @@ class KeyCeremonyTrusteeTest {
         }
 
         // get trustee2's encryptedKeyShareFor trustee1
-        val responseShare = myclient.get("/egk/ktrustee/trustee2/encryptedKeyShareFor/trustee1").apply {
+        val responseShare1 = myclient.get("/egk/ktrustee/trustee2/encryptedKeyShareFor/trustee1").apply {
             assertEquals(HttpStatusCode.OK, status)
         }
-        val encryptedKeyShareJson: EncryptedKeyShareJson = responseShare.body()
-        val encryptedKeyShare: EncryptedKeyShare? = encryptedKeyShareJson.import(group)
-        println("---> trustee2's encryptedKeyShareFor trustee1 = ${encryptedKeyShare}")
-        assertTrue(encryptedKeyShare.toString().startsWith("EncryptedKeyShare(ownerXcoord=43, polynomialOwner=trustee2, secretShareFor=trustee1, encryptedCoordinate=HashedElGamalCiphertext(c0="))
+        val encryptedKeyShareJson1: EncryptedKeyShareJson = responseShare1.body()
+        val encryptedKeyShare1: EncryptedKeyShare? = encryptedKeyShareJson1.import(group)
+        println("---> trustee2's encryptedKeyShareFor trustee1 = ${encryptedKeyShareJson1.import(group)}")
+        assertTrue(encryptedKeyShare1.toString().startsWith("EncryptedKeyShare(ownerXcoord=2, polynomialOwner=trustee2, secretShareFor=trustee1, encryptedCoordinate=HashedElGamalCiphertext(c0="))
 
         // send that to trustee1
         //     post("{id}/receiveEncryptedKeyShare") {
         myclient.post("/egk/ktrustee/trustee1/receiveEncryptedKeyShare") {
             contentType(ContentType.Application.Json)
-            setBody(encryptedKeyShareJson)
+            setBody(encryptedKeyShareJson1)
         }.apply {
             assertEquals(HttpStatusCode.OK, status)
             assertEquals("RemoteKeyTrustee trustee1 receiveEncryptedKeyShare from polynomial owner trustee2 correctly", bodyAsText())
         }
 
-        myclient.get("/egk/ktrustee/trustee1/computeSecretKeyShare/2") {
+        // get trustee2's encryptedKeyShareFor trustee1, send that to trustee2
+        val responseShare2 = myclient.get("/egk/ktrustee/trustee1/encryptedKeyShareFor/trustee2").apply {
+            assertEquals(HttpStatusCode.OK, status)
+        }
+        val encryptedKeyShareJson2: EncryptedKeyShareJson = responseShare2.body()
+        myclient.post("/egk/ktrustee/trustee2/receiveEncryptedKeyShare") {
+            contentType(ContentType.Application.Json)
+            setBody(encryptedKeyShareJson2)
+        }.apply {
+            assertEquals(HttpStatusCode.OK, status)
+        }
+
+        // val url = "$remoteURL/ktrustee/$id/checkComplete"
+        myclient.get("/egk/ktrustee/trustee1/checkComplete") {
             contentType(ContentType.Application.Json)
         }.apply {
             assertEquals(HttpStatusCode.OK, status)
+            assertEquals("true", bodyAsText())
         }
 
         // sneak this test in
@@ -595,7 +529,6 @@ class KeyCeremonyTrusteeTest {
         }
     }
 
-    // TODO saveState
     /*
         fun saveState(isJson : Boolean): Result<Boolean, String> {
         return runBlocking {
@@ -610,18 +543,17 @@ class KeyCeremonyTrusteeTest {
         }
     }
      */
-
     @Test
     fun testSaveState() = testApplication {
+        remoteKeyTrustees.clear()
         application {
             configureRouting()
             configureSerialization()
         }
 
-        val body = """{"id":"trustee1","xCoordinate":42,"quorum":3}"""
         client.post("/egk/ktrustee") {
             contentType(ContentType.Application.Json)
-            setBody(body)
+            setBody(makeTrusteeJson(1, 2))
         }.apply {
             assertEquals(HttpStatusCode.Created, status)
             assertEquals("RemoteKeyTrustee trustee1 created", bodyAsText())
@@ -629,53 +561,17 @@ class KeyCeremonyTrusteeTest {
 
         client.get("/egk/ktrustee/trustee1/saveState/true").apply {
             assertEquals(HttpStatusCode.InternalServerError, status)
-            assertEquals("RemoteKeyTrustee trustee1 saveState failed secretKeyShare was not set", bodyAsText())
+            assertEquals("RemoteKeyTrustee trustee1 saveState failed requires nguardians 2 but have 1 shares", bodyAsText())
         }
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Note that these dont usually get called, sinve the above ones succeed.
-    // Im unclear in what the above fails, and these get called.
+    // Im unclear in what case the above fails, and these get called.
 
-    /*
-    override fun keyShareFor(otherGuardian: String): Result<KeyShare, String> {
-        return runBlocking {
-            val url = "$remoteURL/ktrustee/$id/keyShareFor/$otherGuardian"
-            val response: HttpResponse = client.get(url) {
-                headers {
-                    append(HttpHeaders.Accept, "application/json")
-                    if (isSSL) basicAuth("electionguard", certPassword)
-                }
-            }
-            if (response.status != HttpStatusCode.OK) {
-                println("response.status for $url = ${response.status}")
-                Err("$url error = ${response.status}")
-            } else {
-                val keyShareJson: KeyShareJson = response.body()
-                val keyShare: KeyShare? = keyShareJson.import(group)
-                println("$id secretKeyShareFor ${keyShare?.secretShareFor} = ${response.status}")
-                if (keyShare == null) Err("SecretKeyShare") else Ok(keyShare)
-            }
-        }
-    }
-
-    override fun receiveKeyShare(keyShare: KeyShare): Result<Boolean, String> {
-        return runBlocking {
-            val url = "$remoteURL/ktrustee/$id/receiveKeyShare"
-            val response: HttpResponse = client.post(url) {
-                headers {
-                    append(HttpHeaders.ContentType, "application/json")
-                    if (isSSL) basicAuth("electionguard", certPassword)
-                }
-                setBody(keyShare.publishJson())
-            }
-            println("$id receiveKeyShare from ${keyShare.polynomialOwner} = ${response.status}")
-            if (response.status == HttpStatusCode.OK) Ok(true) else Err(response.toString())
-        }
-    }
-     */
     @Test
     fun testReceiveKeyShareError() = testApplication {
+        remoteKeyTrustees.clear()
         application {
             configureRouting()
             configureSerialization()
@@ -689,21 +585,21 @@ class KeyCeremonyTrusteeTest {
         // create trustees
         myclient.post("/egk/ktrustee") {
             contentType(ContentType.Application.Json)
-            setBody("""{"id":"trustee1","xCoordinate":42,"quorum":3}""")
+            setBody(makeTrusteeJson(1))
         }.apply {
             assertEquals(HttpStatusCode.Created, status)
             assertEquals("RemoteKeyTrustee trustee1 created", bodyAsText())
         }
         myclient.post("/egk/ktrustee") {
             contentType(ContentType.Application.Json)
-            setBody("""{"id":"trustee2","xCoordinate":43,"quorum":3}""")
+            setBody(makeTrusteeJson(2))
         }.apply {
             assertEquals(HttpStatusCode.Created, status)
             assertEquals("RemoteKeyTrustee trustee2 created", bodyAsText())
         }
         myclient.post("/egk/ktrustee") {
             contentType(ContentType.Application.Json)
-            setBody("""{"id":"trustee3","xCoordinate":44,"quorum":3}""")
+            setBody(makeTrusteeJson(3))
         }.apply {
             assertEquals(HttpStatusCode.Created, status)
             assertEquals("RemoteKeyTrustee trustee3 created", bodyAsText())
@@ -741,6 +637,7 @@ class KeyCeremonyTrusteeTest {
 
     @Test
     fun testReceiveKeyShare() = testApplication {
+        remoteKeyTrustees.clear()
         application {
             configureRouting()
             configureSerialization()
@@ -754,21 +651,21 @@ class KeyCeremonyTrusteeTest {
         // create trustees
         myclient.post("/egk/ktrustee") {
             contentType(ContentType.Application.Json)
-            setBody("""{"id":"trustee1","xCoordinate":42,"quorum":3}""")
+            setBody(makeTrusteeJson(1))
         }.apply {
             assertEquals(HttpStatusCode.Created, status)
             assertEquals("RemoteKeyTrustee trustee1 created", bodyAsText())
         }
         myclient.post("/egk/ktrustee") {
             contentType(ContentType.Application.Json)
-            setBody("""{"id":"trustee2","xCoordinate":43,"quorum":3}""")
+            setBody(makeTrusteeJson(2))
         }.apply {
             assertEquals(HttpStatusCode.Created, status)
             assertEquals("RemoteKeyTrustee trustee2 created", bodyAsText())
         }
         myclient.post("/egk/ktrustee") {
             contentType(ContentType.Application.Json)
-            setBody("""{"id":"trustee3","xCoordinate":44,"quorum":3}""")
+            setBody(makeTrusteeJson(3))
         }.apply {
             assertEquals(HttpStatusCode.Created, status)
             assertEquals("RemoteKeyTrustee trustee3 created", bodyAsText())
@@ -809,7 +706,7 @@ class KeyCeremonyTrusteeTest {
         val keyShareJson: KeyShareJson = responseShare.body()
         val keyShare: KeyShare? = keyShareJson.import(group)
         println("---> trustee2's keyShare trustee1 = ${keyShare}")
-        assertTrue(keyShare.toString().startsWith("KeyShare(ownerXcoord=43, polynomialOwner=trustee2, secretShareFor=trustee1, yCoordinate="))
+        assertTrue(keyShare.toString().startsWith("KeyShare(ownerXcoord=2, polynomialOwner=trustee2, secretShareFor=trustee1, yCoordinate="))
 
         // send that to trustee1
         //     post("{id}/receiveKeyShare") {
@@ -822,4 +719,8 @@ class KeyCeremonyTrusteeTest {
             assertEquals("RemoteKeyTrustee trustee1 receiveSecretKeyShare from polynomial owner trustee2 correctly", bodyAsText())
         }
     }
+}
+
+private fun makeTrusteeJson(xcoord: Int, n: Int = 3) : String {
+    return """{"id":"trustee$xcoord","xCoordinate":$xcoord,"nguardians":$n,"quorum":$n}"""
 }

@@ -20,9 +20,10 @@ private val logger = KotlinLogging.logger("RemoteKeyTrustee")
 @Serializable
 data class RemoteKeyTrustee(val id: String,
                             val xCoordinate: Int,
+                            val nguardians: Int,
                             val quorum: Int) {
     @Transient
-    private val delegate = KeyCeremonyTrustee(groupContext, id, xCoordinate, quorum)
+    private val delegate = KeyCeremonyTrustee(groupContext, id, xCoordinate, nguardians, quorum)
 
     fun publicKeys() = delegate.publicKeys()
     fun receivePublicKeys(keys: PublicKeys) = delegate.receivePublicKeys(keys)
@@ -30,19 +31,13 @@ data class RemoteKeyTrustee(val id: String,
     fun receiveEncryptedKeyShare(share: EncryptedKeyShare?) = delegate.receiveEncryptedKeyShare(share)
     fun keyShareFor(otherGuardian: String): Result<KeyShare, String> = delegate.keyShareFor(otherGuardian)
     fun receiveKeyShare(keyShare: KeyShare): Result<Boolean, String> = delegate.receiveKeyShare(keyShare)
+    fun checkComplete() = delegate.checkComplete()
     fun saveState(trusteeDir : String, isJson : Boolean) = delegate.saveState(trusteeDir, isJson)
-    fun computeSecretKeyShare(nguardians : Int) = delegate.computeSecretKeyShare(nguardians)
 }
 
 val remoteKeyTrustees = mutableListOf<RemoteKeyTrustee>()
 
 fun KeyCeremonyTrustee.saveState(trusteeDir : String, isJson : Boolean) : Result<Boolean, String> {
-    try {
-        this.secretKeyShare()
-    } catch (t : Throwable) {
-        return Err("secretKeyShare was not set")
-    }
-
     // store the trustees in some private place.
     val trusteePublisher = makePublisher(trusteeDir, false, isJson)
     return try {

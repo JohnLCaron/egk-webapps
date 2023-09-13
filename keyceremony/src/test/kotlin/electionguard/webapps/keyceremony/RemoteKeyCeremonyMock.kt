@@ -37,9 +37,9 @@ class RemoteKeyCeremonyMock() {
                 json()
             }
         }
-        val trustee1 = RemoteKeyTrusteeProxy(group, client, remoteUrl, "id1", 1, 3, "fake")
-        val trustee2 = RemoteKeyTrusteeProxy(group, client, remoteUrl, "id2", 2, 3, "fake")
-        val trustee3 = RemoteKeyTrusteeProxy(group, client, remoteUrl, "id3", 3, 3, "fake")
+        val trustee1 = RemoteKeyTrusteeProxy(group, client, remoteUrl, "id1", 1, 3, 3)
+        val trustee2 = RemoteKeyTrusteeProxy(group, client, remoteUrl, "id2", 2, 3, 3)
+        val trustee3 = RemoteKeyTrusteeProxy(group, client, remoteUrl, "id3", 3, 3, 3)
         val spy3 = spyk(trustee3)
 
         val exchangeResult = keyCeremonyExchange(listOf(trustee1, trustee2, spy3))
@@ -54,7 +54,6 @@ class RemoteKeyCeremonyMock() {
         assertEquals(3, kcResults.publicKeysSorted.size)
 
         listOf(trustee1, trustee2, spy3).forEach {
-            assertNotNull(it.keyShare())
             it.saveState(true)
         }
     }
@@ -66,9 +65,9 @@ class RemoteKeyCeremonyMock() {
                 json()
             }
         }
-        val trustee1 = RemoteKeyTrusteeProxy(group, client, remoteUrl, "id1", 1, 3, "fake")
-        val trustee2 = RemoteKeyTrusteeProxy(group, client, remoteUrl, "id2", 2, 3, "fake")
-        val trustee3 = RemoteKeyTrusteeProxy(group, client, remoteUrl, "id3", 3, 3, "fake")
+        val trustee1 = RemoteKeyTrusteeProxy(group, client, remoteUrl, "id1", 1, 3, 3)
+        val trustee2 = RemoteKeyTrusteeProxy(group, client, remoteUrl, "id2", 2, 3, 3)
+        val trustee3 = RemoteKeyTrusteeProxy(group, client, remoteUrl, "id3", 3, 3, 3)
         val spy3 = spyk(trustee3)
         every { spy3.encryptedKeyShareFor(trustee1.id()) } answers {
             trustee3.encryptedKeyShareFor(trustee1.id()) // trustee needs to cache
@@ -92,9 +91,9 @@ class RemoteKeyCeremonyMock() {
                 json()
             }
         }
-        val trustee1 = RemoteKeyTrusteeProxy(group, client, remoteUrl, "id1", 1, 3, "fake")
-        val trustee2 = RemoteKeyTrusteeProxy(group, client, remoteUrl, "id2", 2, 3, "fake")
-        val trustee3 = RemoteKeyTrusteeProxy(group, client, remoteUrl, "id3", 3, 3, "fake")
+        val trustee1 = RemoteKeyTrusteeProxy(group, client, remoteUrl, "id1", 1, 3, 3)
+        val trustee2 = RemoteKeyTrusteeProxy(group, client, remoteUrl, "id2", 2, 3, 3)
+        val trustee3 = RemoteKeyTrusteeProxy(group, client, remoteUrl, "id3", 3, 3, 3)
         val spy3 = spyk(trustee3)
         every { spy3.encryptedKeyShareFor(trustee1.id()) } answers {
             trustee3.encryptedKeyShareFor(trustee1.id()) // trustee needs to cache
@@ -116,9 +115,9 @@ class RemoteKeyCeremonyMock() {
                 json()
             }
         }
-        val trustee1 = RemoteKeyTrusteeProxy(group, client, remoteUrl, "id1", 1, 3, "fake")
-        val trustee2 = RemoteKeyTrusteeProxy(group, client, remoteUrl, "id2", 2, 3, "fake")
-        val trustee3 = RemoteKeyTrusteeProxy(group, client, remoteUrl, "id3", 3, 3, "fake")
+        val trustee1 = RemoteKeyTrusteeProxy(group, client, remoteUrl, "id1", 1, 3, 3)
+        val trustee2 = RemoteKeyTrusteeProxy(group, client, remoteUrl, "id2", 2, 3, 3)
+        val trustee3 = RemoteKeyTrusteeProxy(group, client, remoteUrl, "id3", 3, 3, 3)
         val spy3 = spyk(trustee3)
         every { spy3.encryptedKeyShareFor(trustee1.id()) } answers {
             trustee3.encryptedKeyShareFor(trustee1.id()) // trustee needs to cache
@@ -147,9 +146,9 @@ class RemoteKeyCeremonyMock() {
                 json()
             }
         }
-        val trustee1 = RemoteKeyTrusteeProxy(group, client, remoteUrl, "id1", 1, 3, "fake")
-        val trustee2 = RemoteKeyTrusteeProxy(group, client, remoteUrl, "id2", 2, 3, "fake")
-        val trustee3 = RemoteKeyTrusteeProxy(group, client, remoteUrl, "id3", 3, 3, "fake")
+        val trustee1 = RemoteKeyTrusteeProxy(group, client, remoteUrl, "id1", 1, 3, 3)
+        val trustee2 = RemoteKeyTrusteeProxy(group, client, remoteUrl, "id2", 2, 3, 3)
+        val trustee3 = RemoteKeyTrusteeProxy(group, client, remoteUrl, "id3", 3, 3, 3)
         val spy3 = spyk(trustee3)
         every { spy3.encryptedKeyShareFor(trustee1.id()) } answers {
             trustee3.encryptedKeyShareFor(trustee1.id()) // trustee needs to cache

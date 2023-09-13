@@ -4,7 +4,6 @@ import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
 import electionguard.core.ElementModP
-import electionguard.core.ElementModQ
 import electionguard.core.GroupContext
 import electionguard.core.SchnorrProof
 import electionguard.json2.*
@@ -24,14 +23,14 @@ import kotlinx.coroutines.runBlocking
 class RemoteKeyTrusteeProxy(
     val group : GroupContext,
     val client: HttpClient,
-    val remoteURL: String,
+    val remoteURL: String = "",
     val id: String,
     val xcoord: Int,
+    val nguardians: Int,
     val quorum: Int,
-    val certPassword: String,
+    val egPassword: String,
 ) : KeyCeremonyTrusteeIF {
     var publicKeys : PublicKeys? = null
-    var secretKeyShare : ElementModQ? = null
 
     init {
         runBlocking {
@@ -39,12 +38,13 @@ class RemoteKeyTrusteeProxy(
             val response: HttpResponse = client.post(url) {
                 headers {
                     append(HttpHeaders.ContentType, "application/json")
-                    if (isSSL) basicAuth("electionguard", certPassword)
+                    if (isSSL) basicAuth("electionguard", egPassword)
                 }
                 setBody(
                     """{
                       "id": "$id",
                       "xCoordinate": $xcoord,
+                      "nguardians": $nguardians
                       "quorum": $quorum
                     }"""
                 )
@@ -62,7 +62,7 @@ class RemoteKeyTrusteeProxy(
             val response: HttpResponse = client.get(url) {
                 headers {
                     append(HttpHeaders.Accept, "application/json")
-                    if (isSSL) basicAuth("electionguard", certPassword)
+                    if (isSSL) basicAuth("electionguard", egPassword)
                 }
             }
             if (response.status != HttpStatusCode.OK) {
@@ -91,7 +91,7 @@ class RemoteKeyTrusteeProxy(
             val response: HttpResponse = client.post(url) {
                 headers {
                     append(HttpHeaders.ContentType, "application/json")
-                    if (isSSL) basicAuth("electionguard", certPassword)
+                    if (isSSL) basicAuth("electionguard", egPassword)
                 }
                 setBody(publicKeys.publishJson())
             }
@@ -106,7 +106,7 @@ class RemoteKeyTrusteeProxy(
             val response: HttpResponse = client.get(url) {
                 headers {
                     append(HttpHeaders.Accept, "application/json")
-                    if (isSSL) basicAuth("electionguard", certPassword)
+                    if (isSSL) basicAuth("electionguard", egPassword)
                 }
             }
             if (response.status != HttpStatusCode.OK) {
@@ -130,7 +130,7 @@ class RemoteKeyTrusteeProxy(
             val response: HttpResponse = client.post(url) {
                 headers {
                     append(HttpHeaders.ContentType, "application/json")
-                    if (isSSL) basicAuth("electionguard", certPassword)
+                    if (isSSL) basicAuth("electionguard", egPassword)
                 }
                 setBody(share.publishJson())
             }
@@ -145,7 +145,7 @@ class RemoteKeyTrusteeProxy(
             val response: HttpResponse = client.get(url) {
                 headers {
                     append(HttpHeaders.Accept, "application/json")
-                    if (isSSL) basicAuth("electionguard", certPassword)
+                    if (isSSL) basicAuth("electionguard", egPassword)
                 }
             }
             if (response.status != HttpStatusCode.OK) {
@@ -166,7 +166,7 @@ class RemoteKeyTrusteeProxy(
             val response: HttpResponse = client.post(url) {
                 headers {
                     append(HttpHeaders.ContentType, "application/json")
-                    if (isSSL) basicAuth("electionguard", certPassword)
+                    if (isSSL) basicAuth("electionguard", egPassword)
                 }
                 setBody(keyShare.publishJson())
             }
@@ -175,12 +175,29 @@ class RemoteKeyTrusteeProxy(
         }
     }
 
+    override fun checkComplete(): Boolean {
+        return runBlocking {
+            val url = "$remoteURL/ktrustee/$id/checkComplete"
+            val response: HttpResponse = client.get(url) {
+                headers {
+                    if (isSSL) basicAuth("electionguard", egPassword)
+                }
+            }
+            if (response.status == HttpStatusCode.OK) {
+                val isComplete = response.bodyAsText()
+                isComplete == "true"
+            } else {
+                false
+            }
+        }
+    }
+
     fun saveState(isJson : Boolean): Result<Boolean, String> {
         return runBlocking {
             val url = "$remoteURL/ktrustee/$id/saveState/$isJson"
             val response: HttpResponse = client.get(url) {
                 headers {
-                    if (isSSL) basicAuth("electionguard", certPassword)
+                    if (isSSL) basicAuth("electionguard", egPassword)
                 }
             }
             println("$id saveState isJson=$isJson status=${response.status}")
@@ -205,30 +222,6 @@ class RemoteKeyTrusteeProxy(
     override fun electionPublicKey(): ElementModP {
         publicKeys()
         return publicKeys?.publicKey()?.key ?: throw IllegalStateException()
-    }
-
-    /** The resulting secretKeyShare for this guardian == (P1(ℓ) + P2(ℓ) + · · · + Pn(ℓ)) mod q. spec 2.0.0, eq 65. */
-    override fun secretKeyShare(): ElementModQ {
-        return secretKeyShare!!
-    }
-
-    override fun computeSecretKeyShare(nguardians : Int): Result<ElementModQ, String> {
-        return runBlocking {
-            val url = "$remoteURL/ktrustee/$id/computeSecretKeyShare/$nguardians"
-            val response: HttpResponse = client.get(url) {
-                headers {
-                    if (isSSL) basicAuth("electionguard", certPassword)
-                }
-            }
-            println("$id keyShare ${xcoord} = ${response.status}")
-            if (response.status == HttpStatusCode.OK) {
-                val keyShareJson: ElementModQJson = response.body()
-                secretKeyShare = keyShareJson.import(group)
-                Ok(secretKeyShare!!)
-            } else {
-                Err(response.bodyAsText())
-            }
-        }
     }
 
     override fun id(): String {

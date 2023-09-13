@@ -135,7 +135,7 @@ fun runKeyCeremony(
 
     val trustees: List<RemoteKeyTrusteeProxy> = List(config.numberOfGuardians) {
         val seq = it + 1
-        RemoteKeyTrusteeProxy(group, client, remoteUrl, "trustee$seq", seq, config.quorum, egPassword)
+        RemoteKeyTrusteeProxy(group, client, remoteURL = remoteUrl, "trustee$seq", seq, config.numberOfGuardians, config.quorum, egPassword)
     }
 
     val exchangeResult = keyCeremonyExchange(trustees)
