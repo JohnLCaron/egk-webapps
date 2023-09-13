@@ -1,0 +1,214 @@
+openapi: "3.0.3"
+info:
+  title: "egk_webapps API"
+  description: "egk_webapps API"
+  version: "1.0.0"
+servers:
+- url: "https://egk_webapps"
+paths:
+  /egk/dtrustee:
+    get:
+      description: ""
+      responses:
+        "200":
+          description: "OK"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: "No trustees found"
+  /egk/dtrustee/{id}/challenge:
+    post:
+      description: ""
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              $ref: "#/components/schemas/ChallengeRequestsJson"
+        required: true
+      responses:
+        "404":
+          description: "Not Found"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: ""
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ChallengeResponsesJson"
+        "500":
+          description: "Internal Server Error"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: ""
+  /egk/dtrustee/{id}/decrypt:
+    post:
+      description: ""
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              $ref: "#/components/schemas/DecryptRequestJson"
+        required: true
+      responses:
+        "404":
+          description: "Not Found"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: ""
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/DecryptResponseJson"
+        "500":
+          description: "Internal Server Error"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: ""
+  /egk/dtrustee/create/{id}:
+    get:
+      description: ""
+      parameters:
+      - name: "id"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ElementModPJson"
+        "400":
+          description: "Bad Request"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: ""
+  /egk/dtrustee/reset:
+    post:
+      description: ""
+      responses:
+        "200":
+          description: "OK"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: "trustees reset"
+components:
+  schemas:
+    ElementModQJson:
+      type: "object"
+      properties:
+        bytes:
+          type: "array"
+          items:
+            type: "string"
+            format: "byte"
+    ChallengeRequestJson:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+        challenge:
+          $ref: "#/components/schemas/ElementModQJson"
+        nonce:
+          $ref: "#/components/schemas/ElementModQJson"
+    ChallengeRequestsJson:
+      type: "object"
+      properties:
+        challenges:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/ChallengeRequestJson"
+    ChallengeResponseJson:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+        response:
+          $ref: "#/components/schemas/ElementModQJson"
+    ChallengeResponsesJson:
+      type: "object"
+      properties:
+        responses:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/ChallengeResponseJson"
+    ElementModPJson:
+      type: "object"
+      properties:
+        bytes:
+          type: "array"
+          items:
+            type: "string"
+            format: "byte"
+    DecryptRequestJson:
+      type: "object"
+      properties:
+        texts:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/ElementModPJson"
+    PartialDecryptionJson:
+      type: "object"
+      properties:
+        guardian_id:
+          type: "string"
+        mbari:
+          $ref: "#/components/schemas/ElementModPJson"
+        u:
+          $ref: "#/components/schemas/ElementModQJson"
+        a:
+          $ref: "#/components/schemas/ElementModPJson"
+        b:
+          $ref: "#/components/schemas/ElementModPJson"
+    DecryptResponseJson:
+      type: "object"
+      properties:
+        shares:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/PartialDecryptionJson"
