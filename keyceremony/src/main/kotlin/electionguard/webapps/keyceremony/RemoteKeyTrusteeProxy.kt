@@ -175,9 +175,9 @@ class RemoteKeyTrusteeProxy(
         }
     }
 
-    override fun checkComplete(): Boolean {
+    override fun isComplete(): Boolean {
         return runBlocking {
-            val url = "$remoteURL/ktrustee/$id/checkComplete"
+            val url = "$remoteURL/ktrustee/$id/isComplete"
             val response: HttpResponse = client.get(url) {
                 headers {
                     if (isSSL) basicAuth("electionguard", egPassword)
@@ -219,7 +219,7 @@ class RemoteKeyTrusteeProxy(
         return publicKeys?.coefficientProofs ?: throw IllegalStateException()
     }
 
-    override fun electionPublicKey(): ElementModP {
+    override fun guardianPublicKey(): ElementModP {
         publicKeys()
         return publicKeys?.publicKey()?.key ?: throw IllegalStateException()
     }

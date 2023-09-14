@@ -31,7 +31,7 @@ data class RemoteKeyTrustee(val id: String,
     fun receiveEncryptedKeyShare(share: EncryptedKeyShare?) = delegate.receiveEncryptedKeyShare(share)
     fun keyShareFor(otherGuardian: String): Result<KeyShare, String> = delegate.keyShareFor(otherGuardian)
     fun receiveKeyShare(keyShare: KeyShare): Result<Boolean, String> = delegate.receiveKeyShare(keyShare)
-    fun checkComplete() = delegate.checkComplete()
+    fun isComplete() = delegate.isComplete()
     fun saveState(trusteeDir : String, isJson : Boolean) = delegate.saveState(trusteeDir, isJson)
 }
 

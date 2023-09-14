@@ -178,7 +178,7 @@ fun Route.trusteeRouting() {
         }
     }
 
-    get("{id}/checkComplete") {
+    get("{id}/isComplete") {
         val id = call.parameters["id"]
         val rguardian =
             remoteKeyTrustees.find { it.id == id } ?: return@get call.respondText(
@@ -186,8 +186,8 @@ fun Route.trusteeRouting() {
                 status = HttpStatusCode.NotFound
             )
         println(rguardian)
-        val checkComplete = rguardian.checkComplete()
-        call.respond(if (checkComplete) "true" else "false")
+        val isComplete = rguardian.isComplete()
+        call.respond(if (isComplete) "true" else "false")
     }
 
     get("{id}/saveState") {

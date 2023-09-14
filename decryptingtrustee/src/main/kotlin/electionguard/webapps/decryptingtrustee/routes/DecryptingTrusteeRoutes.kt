@@ -31,14 +31,13 @@ fun Route.trusteeRouting() {
         call.respondText("trustees reset", status = HttpStatusCode.OK)
     }
 
-    get("create/{id}") {
+    get("load/{id}") {
         val id = call.parameters["id"]!!
         try {
             val trustee = RemoteDecryptingTrusteeJson(id)
             trustees[id] = trustee
             println("RemoteDecryptingTrustee ${trustee.id()} created")
-            val result = trustee.publicKey()
-            call.respond(result.publishJson()) // ElementModP
+            call.respond(trustee.publicKey().publishJson()) // ElementModP
         } catch (t: Throwable) {
             logger.atError().setCause(t).log(" create RemoteDecryptingTrustee $id failed ${t.message}")
             return@get call.respondText(

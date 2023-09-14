@@ -33,7 +33,7 @@ class DecryptingTrusteeProxy(
 
     init {
         runBlocking {
-            val url = "$remoteURL/dtrustee/create/$id"
+            val url = "$remoteURL/dtrustee/load/$id"
             val response: HttpResponse = client.get(url)  {
                 headers {
                     append(HttpHeaders.Accept, "application/json")
@@ -41,7 +41,7 @@ class DecryptingTrusteeProxy(
                 }
             }
             if (response.status != HttpStatusCode.OK) {
-                initError = "DecryptingTrusteeProxy create $id == ${response.status}"
+                initError = "DecryptingTrusteeProxy load $id == ${response.status}"
             } else {
                 val publicKeyJson: ElementModPJson = response.body()
                 val remotePublicKey = publicKeyJson.import(group)
@@ -49,7 +49,7 @@ class DecryptingTrusteeProxy(
                     initError = "DecryptingTrustee $id publicKey does not match election record"
                 }
             }
-            println("DecryptingTrusteeProxy create ${if (initError == null) "OK" else "FAIL"}")
+            println("DecryptingTrusteeProxy load $id ${if (initError == null) "OK" else "FAIL"}")
         }
     }
 

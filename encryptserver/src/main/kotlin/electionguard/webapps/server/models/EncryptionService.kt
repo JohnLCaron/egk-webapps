@@ -7,21 +7,19 @@ import electionguard.ballot.ElectionInitialized
 import electionguard.ballot.EncryptedBallot
 import electionguard.ballot.Manifest
 import electionguard.ballot.PlaintextBallot
+import electionguard.core.*
 import electionguard.core.Base16.fromHex
-import electionguard.core.PowRadixOption
-import electionguard.core.ProductionMode
-import electionguard.core.UInt256
 
-import electionguard.core.productionGroup
 import electionguard.encrypt.AddEncryptedBallot
 import electionguard.encrypt.CiphertextBallot
 import electionguard.publish.makePublisher
 import electionguard.publish.readElectionRecord
 
-class EncryptionService private constructor(inputDir: String,
-                             val outputDir: String,
+class EncryptionService private constructor(
+        val group: GroupContext,
+        inputDir: String,
+        val outputDir: String,
     ) {
-    val group = productionGroup(PowRadixOption.HIGH_MEMORY_USE, ProductionMode.Mode4096)
     val manifest : Manifest
     val electionInit : ElectionInitialized
     val isJson : Boolean
@@ -91,9 +89,9 @@ class EncryptionService private constructor(inputDir: String,
     companion object {
         @Volatile private var instance: EncryptionService? = null
 
-        fun initialize(inputDir: String, outputDir: String) =
+        fun initialize(group: GroupContext, inputDir: String, outputDir: String) =
             instance ?: synchronized(this) {
-                instance ?: EncryptionService(inputDir, outputDir).also { instance = it }
+                instance ?: EncryptionService(group, inputDir, outputDir).also { instance = it }
             }
 
         // dont call until after initialized() is called

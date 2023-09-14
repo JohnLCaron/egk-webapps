@@ -1,13 +1,14 @@
 # ElectionGuard-Kotlin-Multiplatform Webapps
 
-_last update 9/13/2023_
+_last update 9/14/2023_
 
 [ElectionGuard-Kotlin-Multiplatform (EKM)](https://github.com/danwallach/electionguard-kotlin-multiplatform) 
 is a multiplatform Kotlin implementation of 
 [ElectionGuard](https://github.com/microsoft/electionguard), version 2.0.0, available under an MIT-style open source 
 [License](LICENSE). 
 
-This repo contains web applications built on top of that library.
+This repo contains web applications built on top of that library,
+using JetBrain's [ktor web framework](https://ktor.io/).
 
 Currently Java 17 is required.
 
@@ -271,7 +272,7 @@ To use SSL in decryptingtrustee (see [Using SSL](#using-ssl)):
 /usr/lib/jvm/jdk-19/bin/java \
   -classpath decryptingtrustee/build/libs/decryptingtrustee-all.jar \
   electionguard.webapps.decryptingtrustee.RunDecryptingTrusteeKt \
-  -trusteeDir /home/stormy/dev/github/electionguard-kotlin-multiplatform/egklib/src/commonTest/data/workflow/allAvailableJson/private_data/trustees \
+  -trusteeDir /home/stormy/dev/github/electionguard-kotlin-multiplatform/egklib/src/commonTest/data/workflow/someAvailableJson/private_data/trustees \
   --keystorePassword $EG_KEYSTORE_PASSWORD \
   --electionguardPassword $ELECTIONGUARD_SSL_PASSWORD
 ````
@@ -305,59 +306,15 @@ Example:
   --outputDir testOut/remoteWorkflow/RunRemoteDecryption
 ````
 
-You should see something like this from decryption :
-
-````
-RunRemoteDecryption starting
-   input= /home/stormy/dev/github/electionguard-kotlin-multiplatform/egklib/src/commonTest/data/workflow/allAvailableJson
-   missing= 'null'
-   output = testOut/remoteWorkflow/RunRemoteDecryption
-runRemoteDecrypt present = [guardian1, guardian2, guardian3] missing = []
-runRemoteDecrypt reset 200 OK
-DecryptingTrusteeProxy create OK
-DecryptingTrusteeProxy create OK
-DecryptingTrusteeProxy create OK
-DecryptingTrusteeProxy challenge guardian1 = 200 OK
-DecryptingTrusteeProxy challenge guardian2 = 200 OK
-DecryptingTrusteeProxy challenge guardian3 = 200 OK
-runRemoteDecrypt took 9606 millisecs
-success = true
-````
-
-You should see something like this from decryptingtrustee :
-
-````
-2023-09-10 15:15:08.297 INFO  Status: 200 OK, HTTP method: POST, Path: /egk/dtrustee/reset
-RemoteDecryptingTrustee guardian1 created
-2023-09-10 15:15:11.072 INFO  Status: 200 OK, HTTP method: GET, Path: /egk/dtrustee/create/guardian1
-RemoteDecryptingTrustee guardian2 created
-2023-09-10 15:15:11.126 INFO  Status: 200 OK, HTTP method: GET, Path: /egk/dtrustee/create/guardian2
-RemoteDecryptingTrustee guardian3 created
-2023-09-10 15:15:11.138 INFO  Status: 200 OK, HTTP method: GET, Path: /egk/dtrustee/create/guardian3
-RemoteDecryptingTrustee guardian1 decrypt
-2023-09-10 15:15:11.820 INFO  Status: 200 OK, HTTP method: POST, Path: /egk/dtrustee/1/decrypt
-RemoteDecryptingTrustee guardian2 decrypt
-2023-09-10 15:15:12.542 INFO  Status: 200 OK, HTTP method: POST, Path: /egk/dtrustee/2/decrypt
-RemoteDecryptingTrustee guardian3 decrypt
-2023-09-10 15:15:13.168 INFO  Status: 200 OK, HTTP method: POST, Path: /egk/dtrustee/3/decrypt
-RemoteDecryptingTrustee guardian1 challenge
-2023-09-10 15:15:13.770 INFO  Status: 200 OK, HTTP method: POST, Path: /egk/dtrustee/1/challenge
-RemoteDecryptingTrustee guardian2 challenge
-2023-09-10 15:15:13.793 INFO  Status: 200 OK, HTTP method: POST, Path: /egk/dtrustee/2/challenge
-RemoteDecryptingTrustee guardian3 challenge
-2023-09-10 15:15:13.809 INFO  Status: 200 OK, HTTP method: POST, Path: /egk/dtrustee/3/challenge
-````
-
-You can check that the Decrypted tally file was written to the outputDir.
-
 To use SSL in decryption (see [Using SSL](#using-ssl)):
 
 ````
 /usr/lib/jvm/jdk-19/bin/java \
   -classpath decryption/build/libs/decryption-all.jar \
   electionguard.webapps.decryption.RunRemoteDecryptionKt \
-  --inputDir /home/stormy/dev/github/electionguard-kotlin-multiplatform/egklib/src/commonTest/data/workflow/allAvailableJson \
-  --outputDir testOut/remoteWorkflow/RunRemoteDecryption \
+  --inputDir /home/stormy/dev/github/electionguard-kotlin-multiplatform/egklib/src/commonTest/data/workflow/someAvailableJson \
+  --outputDir testOut/remoteWorkflow/RunRemoteDecryptionSSL \
+  --missing 1,3 \
   --keystorePassword $EG_KEYSTORE_PASSWORD \
   --electionguardPassword $ELECTIONGUARD_SSL_PASSWORD
 ````
@@ -371,9 +328,6 @@ Also see [Encryption Server REST API](docs/EncryptionServer.md).
 
 
 ### Encryption Server
-
-Its purpose is to provide ballot encryption to remote clients, or to non-JVM programs.
-It uses JetBrain's [ktor web framework](https://ktor.io/).
 
 ````
 Usage: RunEgkServerKt options_list

@@ -16,7 +16,6 @@ import java.io.*
 private var ksPassword = ""
 var egPassword = ""
 var isSSL = false
-val groupContext = productionGroup(PowRadixOption.HIGH_MEMORY_USE, ProductionMode.Mode4096)
 
 fun main(args: Array<String>) {
     val parser = ArgParser("RunEgkServerKt")
@@ -61,7 +60,8 @@ fun main(args: Array<String>) {
             "  serverPort = '$serverPort'\n" +
             " ")
 
-    EncryptionService.initialize(inputDir, outputDir)
+    val groupContext = productionGroup(PowRadixOption.HIGH_MEMORY_USE, ProductionMode.Mode4096)
+    EncryptionService.initialize(groupContext, inputDir, outputDir)
 
     if (isSSL) {
         egPassword = electionguardPassword!!

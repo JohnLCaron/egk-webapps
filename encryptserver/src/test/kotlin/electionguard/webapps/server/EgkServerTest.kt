@@ -22,24 +22,23 @@ import electionguard.webapps.server.plugins.configureSerialization
 class EgkServerTest {
     val inputDir = "../testInput/chained"
     val outputDir = "testOut/encrypt/EgkServerTest"
+    val group = productionGroup()
 
     init {
-        // clean out the output directory
-        val group = productionGroup()
         val electionRecord = readElectionRecord(group, inputDir)
         val electionInit = electionRecord.electionInit()!!
+        // clean out the output directory
         val publisher = makePublisher(outputDir, true, electionRecord.isJson())
         publisher.writeElectionInitialized(electionInit)
     }
 
     @Test
     fun testHello() = testApplication {
-        EncryptionService.initialize(inputDir, outputDir)
+        EncryptionService.initialize(group, inputDir, outputDir)
 
         application {
             configureRouting()
         }
-
         client.get("/egk/hello").apply {
             assertEquals(HttpStatusCode.OK, status)
             assertEquals("Hello!", bodyAsText())
@@ -48,7 +47,7 @@ class EgkServerTest {
 
     @Test
     fun testBadRoute() = testApplication {
-        EncryptionService.initialize(inputDir, outputDir)
+        EncryptionService.initialize(group, inputDir, outputDir)
 
         application {
             configureRouting()
@@ -64,13 +63,13 @@ class EgkServerTest {
 
     @Test
     fun testBadCast() = testApplication {
-        EncryptionService.initialize(inputDir, outputDir)
+        EncryptionService.initialize(group, inputDir, outputDir)
 
         application {
             configureRouting()
         }
 
-        val response = client.get("/egk/castBallot/device0/42").apply {
+        val response = client.get("/egk/device0/castBallot/42").apply {
             println("status = $status bodyAsText = ${bodyAsText()}")
             assertEquals(HttpStatusCode.BadRequest, status)
             assertEquals("EgkServer cast ccode=42 failed 'illegal confirmation code (UInt256 must have exactly 32 bytes)'", bodyAsText())
@@ -80,13 +79,13 @@ class EgkServerTest {
 
     @Test
     fun testBadSpoil() = testApplication {
-        EncryptionService.initialize(inputDir, outputDir)
+        EncryptionService.initialize(group, inputDir, outputDir)
 
         application {
             configureRouting()
         }
 
-        val response = client.get("/egk/challengeBallot/device0/xyz").apply {
+        val response = client.get("/egk/device0/challengeBallot/xyz").apply {
             println("status = $status bodyAsText = ${bodyAsText()}")
             assertEquals(HttpStatusCode.BadRequest, status)
             assertEquals("EgkServer spoil ccode=xyz failed 'illegal confirmation code'", bodyAsText())
@@ -96,7 +95,7 @@ class EgkServerTest {
 
     @Test
     fun testEncrypt() = testApplication {
-        EncryptionService.initialize(inputDir, outputDir)
+        EncryptionService.initialize(group, inputDir, outputDir)
 
         application {
             configureRouting()
@@ -111,10 +110,10 @@ class EgkServerTest {
 
         val encryptionService = EncryptionService.getInstance()
         val ballotProvider = RandomBallotProvider(encryptionService.manifest)
-        repeat(7) {
+        repeat(11) {
             val ballot : PlaintextBallot = ballotProvider.makeBallot()
 
-            myclient.post("/egk/encryptBallot/device42") {
+            myclient.post("/egk/device42/encryptBallot") {
                 contentType(ContentType.Application.Json)
                 setBody(ballot.publishJson())
             }.apply {
@@ -123,9 +122,16 @@ class EgkServerTest {
                 val responseJson = Json.decodeFromString<EncryptionResponseJson>(bodyAsText())
                 println(" responseJson cc=${responseJson.confirmationCode}")
 
-                myclient.get("/egk/castBallot/device42/${responseJson.confirmationCode}").apply {
-                    assertEquals(HttpStatusCode.OK, status)
-                    println(" castBallot state = $status body=${bodyAsText()}")
+                if (it % 4 == 0) {
+                    myclient.get("/egk/device42/challengeAndDecryptBallot/${responseJson.confirmationCode}").apply {
+                        assertEquals(HttpStatusCode.OK, status)
+                        println(" challengeAndDecryptBallot state = $status body=${bodyAsText()}")
+                    }
+                } else {
+                    myclient.get("/egk/device42/castBallot/${responseJson.confirmationCode}").apply {
+                        assertEquals(HttpStatusCode.OK, status)
+                        println(" castBallot state = $status body=${bodyAsText()}")
+                    }
                 }
 
             }
