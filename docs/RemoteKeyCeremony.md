@@ -47,7 +47,7 @@ route("/egk/ktrustee") {
        call.respondText("RemoteKeyTrustee ${rguardian.id} saveState succeeded")
     }  
     
-    get("{id}/checkComplete") {
+    get("{id}/isComplete") {
          call.respond("true" or "false")
     }  
 

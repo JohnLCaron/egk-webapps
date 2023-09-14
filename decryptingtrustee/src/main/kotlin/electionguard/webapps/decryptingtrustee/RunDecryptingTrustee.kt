@@ -1,20 +1,17 @@
 package electionguard.webapps.decryptingtrustee
 
 import io.ktor.server.application.*
-import io.ktor.server.plugins.callloging.*
 import electionguard.core.PowRadixOption
 import electionguard.core.ProductionMode
 import electionguard.core.productionGroup
 import electionguard.webapps.decryptingtrustee.plugins.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import io.ktor.server.request.*
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.default
 import kotlinx.cli.required
 import org.slf4j.LoggerFactory
-import org.slf4j.event.Level
 import java.io.File
 import java.io.FileInputStream
 import java.security.KeyStore
@@ -96,18 +93,9 @@ fun main(args: Array<String>) {
     }
 }
 
-@Suppress("unused") // application.conf references the main function. This annotation prevents the IDE from marking it as unused.
 fun Application.module() {
-    install(CallLogging) {
-        level = Level.INFO
-        format { call ->
-            val status = call.response.status()
-            val httpMethod = call.request.httpMethod.value
-            val path = call.request.path()
-            "Status: $status, HTTP method: $httpMethod, Path: $path"
-        }
-    }
     if (isSSL) configureSecurity(egPassword)
+    configureMonitoring()
     configureSerialization()
     configureAdministration()
     configureRouting()

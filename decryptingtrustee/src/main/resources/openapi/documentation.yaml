@@ -99,7 +99,7 @@ paths:
               examples:
                 Example#1:
                   value: ""
-  /egk/dtrustee/create/{id}:
+  /egk/dtrustee/load/{id}:
     get:
       description: ""
       parameters:

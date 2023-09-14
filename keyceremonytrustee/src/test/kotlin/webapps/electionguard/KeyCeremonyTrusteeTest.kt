@@ -423,8 +423,7 @@ class KeyCeremonyTrusteeTest {
         }
 
         // not enough shares
-        // val url = "$remoteURL/ktrustee/$id/checkComplete"
-        myclient.get("/egk/ktrustee/trustee1/checkComplete") {
+        myclient.get("/egk/ktrustee/trustee1/isComplete") {
             contentType(ContentType.Application.Json)
         }.apply {
             assertEquals("false", bodyAsText())
@@ -515,8 +514,7 @@ class KeyCeremonyTrusteeTest {
             assertEquals(HttpStatusCode.OK, status)
         }
 
-        // val url = "$remoteURL/ktrustee/$id/checkComplete"
-        myclient.get("/egk/ktrustee/trustee1/checkComplete") {
+        myclient.get("/egk/ktrustee/trustee1/isComplete") {
             contentType(ContentType.Application.Json)
         }.apply {
             assertEquals(HttpStatusCode.OK, status)

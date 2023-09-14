@@ -92,6 +92,7 @@ fun main(args: Array<String>) {
     println("RunEgkClient\n" +
             "  inputDir = '$inputDir'\n" +
             "  device = '$device'\n" +
+            "  nballots = '$nballots'\n" +
             "  outputDir = '$outputDir'\n" +
             "  serverUrl = '$serverUrl'\n" +
             "  isSSL = '$isSSL'\n" +
@@ -141,15 +142,16 @@ fun main(args: Array<String>) {
             if (challengeIt) {
                 val decryptResult = proxy.challengeAndDecryptBallot(device, ccode)
                 if (decryptResult is Ok) {
-                    println("challenged $ccode, decryption Ok = ${ballot == decryptResult.unwrap()}")
+                    println("$it challenged $ccode, decryption Ok = ${ballot == decryptResult.unwrap()}")
                 } else {
-                    println("challengeAndDecrypt failed = ${decryptResult.getError()}")
+                    println("$it challengeAndDecrypt failed = ${decryptResult.getError()}")
                 }
             } else {
-                proxy.castBallot(device, ccode)
+                val result = proxy.castBallot(device, ccode)
+                println("$it cast $result")
             }
         } else {
-            println("encryptResult failed = ${encryptResult.getError()}")
+            println("$it encryptResult failed = ${encryptResult.getError()}")
         }
     }
 

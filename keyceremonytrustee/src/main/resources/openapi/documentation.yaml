@@ -46,9 +46,9 @@ paths:
               examples:
                 Example#1:
                   value: ""
-  /egk/ktrustee/{id}/checkComplete:
+  /egk/ktrustee/{id}/isComplete:
     get:
-      description: "val url = \"$remoteURL/ktrustee/$id/checkComplete\""
+      description: "val url = \"$remoteURL/ktrustee/$id/isComplete\""
       parameters:
       - name: "id"
         in: "path"
