@@ -3,7 +3,9 @@ package electionguard.webapps.client
 import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
+import electionguard.ballot.EncryptedBallot
 import electionguard.ballot.PlaintextBallot
+import electionguard.core.GroupContext
 import electionguard.json2.*
 
 import io.ktor.client.*
@@ -15,6 +17,7 @@ import kotlinx.coroutines.runBlocking
 
 /** Implement KeyCeremonyTrusteeIF by connecting to a keyceremonytrustee webapp. */
 class RemoteEncryptorProxy(
+    val group: GroupContext,
     val client: HttpClient,
     val remoteURL: String,
 ) {
@@ -46,6 +49,24 @@ class RemoteEncryptorProxy(
             println("RemoteEncryptorProxy encryptBallot for ballotId=${ballot.ballotId} = ${response.status}")
             val ccodeJson: EncryptionResponseJson = response.body()
             if (response.status == HttpStatusCode.OK) Ok(ccodeJson.confirmationCode) else Err(response.toString())
+        }
+    }
+
+    fun encryptAndCastBallot(device: String, ballot: PlaintextBallot): Result<EncryptedBallot, String> {
+        return runBlocking {
+            val url = "$remoteURL/$device/encryptAndCastBallot"
+            val response: HttpResponse = client.post(url) {
+                headers {
+                    append(HttpHeaders.Accept, "application/json")
+                    append(HttpHeaders.ContentType, "application/json")
+                    if (isSSL) basicAuth("electionguard", egPassword)
+                }
+                setBody(ballot.publishJson())
+            }
+            println("RemoteEncryptorProxy encryptAndCastBallot for ballotId=${ballot.ballotId} = ${response.status}")
+            val eballotJson: EncryptedBallotJson = response.body()
+            val eballot = eballotJson.import(group)
+            if (response.status == HttpStatusCode.OK) Ok(eballot) else Err(response.toString())
         }
     }
 

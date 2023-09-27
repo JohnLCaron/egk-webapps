@@ -1,6 +1,6 @@
 # ElectionGuard-Kotlin-Multiplatform Webapps
 
-_last update 9/14/2023_
+_last update 9/27/2023_
 
 [ElectionGuard-Kotlin-Multiplatform (EKM)](https://github.com/danwallach/electionguard-kotlin-multiplatform) 
 is a multiplatform Kotlin implementation of 
@@ -37,7 +37,7 @@ Currently Java 17 is required.
 
 1. Place latest egklib-jvm-2.0.0-SNAPSHOT.jar into the **libs/** directory in this repo (if needed).
 2. Execute _./gradlew fatJar_ to create the egklib fat jar at **egklib/build/libs/egklib-all.jar**.
-3. Use the fat jar into egklib/build/libs/ of the library repo, and use that repo as your working directory for its
+3. Copy the fat jar into egklib/ of the library repo, and use that repo as your working directory for its
    [Command Line Programs](https://github.com/votingworks/electionguard-kotlin-multiplatform/blob/main/docs/CommandLineInterface.md)
 
 ## Build the Webapps fat jars

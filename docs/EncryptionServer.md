@@ -1,6 +1,6 @@
 **# Encryption Server REST API
 
-_last update 9/13/2023_
+_last update 9/27/2023_
 
 Also see [OpenAPI yaml](../encryptserver/src/main/resources/openapi/documentation.yaml)
 
@@ -13,6 +13,11 @@ route("/egk") {
     post("{device}/encryptBallot") {
         val plaintextBallotJson = call.receive<PlaintextBallotJson>()
         call.respond(EncryptionResponseJson))
+    }
+
+    post("{device}/encryptAndCastBallot") {
+        val plaintextBallotJson = call.receive<PlaintextBallotJson>()
+        call.respond(EncryptedBallotJson))
     }
 
     get("{device}/castBallot/{ccode}") {

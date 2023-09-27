@@ -31,6 +31,7 @@ private var keystore = ""
 private var ksPassword = ""
 var egPassword = ""
 var isSSL = false
+val group = productionGroup()
 
 fun main(args: Array<String>) {
     val parser = ArgParser("RunEgkClientKt")
@@ -116,7 +117,7 @@ fun main(args: Array<String>) {
             json()
         }
     }
-    val proxy = RemoteEncryptorProxy(client, serverUrl)
+    val proxy = RemoteEncryptorProxy(group, client, serverUrl)
     try {
         if (!proxy.hello()) {
             println("Problem with server at $serverUrl - exit")
@@ -153,6 +154,12 @@ fun main(args: Array<String>) {
         } else {
             println("$it encryptResult failed = ${encryptResult.getError()}")
         }
+    }
+
+    val ballot = ballotProvider.makeBallot()
+    val encryptAndCastResult = proxy.encryptAndCastBallot(device, ballot)
+    if (encryptAndCastResult is Ok) {
+        println("encryptAndCastResult random ballot cc = ${encryptAndCastResult.unwrap().confirmationCode}")
     }
 
     // write out the results
