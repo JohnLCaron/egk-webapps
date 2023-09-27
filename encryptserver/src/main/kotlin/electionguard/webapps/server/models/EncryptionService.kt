@@ -60,6 +60,11 @@ class EncryptionService private constructor(
         return encryptor.encrypt(ballot)
     }
 
+    fun encryptAndCast(device: String, ballot: PlaintextBallot) : Result<EncryptedBallot, String> {
+        val encryptor = encryptorForDevice(device)
+        return encryptor.encryptAndCast(ballot)
+    }
+
     fun submit(device: String, ccode: String, state: EncryptedBallot.BallotState) : Result<Boolean, String> {
         try {
             val encryptor = encryptorForDevice(device)

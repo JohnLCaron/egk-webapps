@@ -45,6 +45,28 @@ fun Route.serverRouting() {
         }
     }
 
+    post("{device}/encryptAndCastBallot") {
+        val device = call.parameters["device"] ?: return@post call.respondText(
+            "Missing device",
+            status = HttpStatusCode.BadRequest
+        )
+
+        val plaintextBallotJson = call.receive<PlaintextBallotJson>()
+        val plaintextBallot = plaintextBallotJson.import()
+
+        val result = encryptionService.encryptAndCast(device, plaintextBallot)
+        if (result is Ok) {
+            val encryptedBallot: EncryptedBallot  = result.unwrap()
+            val response = encryptedBallot.publishJson()
+            call.respond(response)
+        } else {
+            call.respondText(
+                "EgkServer encrypt ballot id=${plaintextBallot.ballotId} failed ${result.unwrapError()}",
+                status = HttpStatusCode.InternalServerError
+            )
+        }
+    }
+
     get("{device}/castBallot/{ccode}") {
         val device = call.parameters["device"] ?: return@get call.respondText(
             "Missing device",
