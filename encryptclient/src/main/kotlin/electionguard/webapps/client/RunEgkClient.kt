@@ -3,11 +3,13 @@ package electionguard.webapps.client
 import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.getError
 import com.github.michaelbull.result.unwrap
+import electionguard.ballot.PlaintextBallot
 import electionguard.core.ElGamalPublicKey
 import electionguard.core.GroupContext
 import electionguard.core.productionGroup
 import electionguard.input.RandomBallotProvider
 import electionguard.publish.makeConsumer
+import electionguard.publish.makePublisher
 import electionguard.publish.readElectionRecord
 import electionguard.verifier.VerifyEncryptedBallots
 
@@ -25,6 +27,7 @@ import java.security.KeyStore
 import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManagerFactory
 import javax.net.ssl.X509TrustManager
+import kotlin.math.max
 import kotlin.random.Random
 
 private var keystore = ""
@@ -55,6 +58,17 @@ fun main(args: Array<String>) {
         shortName = "nballots",
         description = "Number of test ballots to send to server"
     ).default(11)
+    val saveBallotsDir by parser.option(
+        ArgType.String,
+        shortName = "saveBallots",
+        description = "save generated plaintext ballots in given directory"
+    )
+    val challengeSome by parser.option(
+        ArgType.Boolean,
+        shortName = "challengeSome",
+        description = "randomly challenge a few ballots"
+    ).default(false)
+
     val serverHost by parser.option(
         ArgType.String,
         shortName = "trusteeHost",
@@ -94,6 +108,8 @@ fun main(args: Array<String>) {
             "  inputDir = '$inputDir'\n" +
             "  device = '$device'\n" +
             "  nballots = '$nballots'\n" +
+            "  saveBallotsDir = '$saveBallotsDir'\n" +
+            "  challengeSome = '$challengeSome'\n" +
             "  outputDir = '$outputDir'\n" +
             "  serverUrl = '$serverUrl'\n" +
             "  isSSL = '$isSSL'\n" +
@@ -132,47 +148,56 @@ fun main(args: Array<String>) {
     val electionRecord = readElectionRecord(group, inputDir)
 
     // encrypt randomly generated ballots
+    val inputBallots = mutableListOf<PlaintextBallot>()
     val ballotProvider = RandomBallotProvider(electionRecord.manifest())
+
     repeat(nballots) {
         val ballot = ballotProvider.makeBallot()
-        val encryptResult = proxy.encryptBallot(device, ballot)
-        if (encryptResult is Ok) {
-            val ccode = encryptResult.unwrap()
-            // randomly challenge a few
-            val challengeIt = Random.nextInt(nballots) < 2
-            if (challengeIt) {
-                val decryptResult = proxy.challengeAndDecryptBallot(device, ccode)
-                if (decryptResult is Ok) {
-                    println("$it challenged $ccode, decryption Ok = ${ballot == decryptResult.unwrap()}")
+        if (challengeSome) {
+            val encryptResult = proxy.encryptBallot(device, ballot)
+            if (encryptResult is Ok) {
+                val ccode = encryptResult.unwrap()
+                // randomly challenge a few
+                val challengeIt = Random.nextInt(nballots) < max(nballots/10, 2) // approx 10% or 2, whichever is bigger
+                if (challengeIt) {
+                    val decryptResult = proxy.challengeAndDecryptBallot(device, ccode)
+                    if (decryptResult is Ok) {
+                        println("$it challenged $ccode, decryption Ok = ${ballot == decryptResult.unwrap()}")
+                    } else {
+                        println("$it challengeAndDecrypt failed = ${decryptResult.getError()}")
+                    }
                 } else {
-                    println("$it challengeAndDecrypt failed = ${decryptResult.getError()}")
+                    val result = proxy.castBallot(device, ccode)
+                    println("$it castBallot $result")
                 }
+                inputBallots.add(ballot)
             } else {
-                val result = proxy.castBallot(device, ccode)
-                println("$it cast $result")
+                println("$it encryptResult failed = ${encryptResult.getError()}")
             }
         } else {
-            println("$it encryptResult failed = ${encryptResult.getError()}")
+            val encryptAndCastResult = proxy.encryptAndCastBallot(device, ballot)
+            if (encryptAndCastResult is Ok) {
+                println("encryptAndCastResult random ballot cc = ${encryptAndCastResult.unwrap().confirmationCode}")
+                inputBallots.add(ballot)
+            }
         }
-    }
-
-    val ballot = ballotProvider.makeBallot()
-    val encryptAndCastResult = proxy.encryptAndCastBallot(device, ballot)
-    if (encryptAndCastResult is Ok) {
-        println("encryptAndCastResult random ballot cc = ${encryptAndCastResult.unwrap().confirmationCode}")
     }
 
     // write out the results
     proxy.sync(device)
 
-    // verify
-    if (outputDir != null) {
-        verifyOutput(group, outputDir!!)
+    // optionally save the input ballots
+   if (saveBallotsDir != null) {
+        val publisher = makePublisher(saveBallotsDir!!, false, true)
+        publisher.writePlaintextBallot(saveBallotsDir!!, inputBallots)
     }
+
+    // verify
+    verifyOutput(group, outputDir)
 }
 
 fun verifyOutput(group: GroupContext, outputDir: String) {
-    val consumer = makeConsumer(outputDir, group, false)
+    val consumer = makeConsumer(group, outputDir, false)
     var count = 0
     consumer.iterateAllEncryptedBallots { true }.forEach {
         count++

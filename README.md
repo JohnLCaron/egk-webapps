@@ -376,14 +376,16 @@ Options:
     --device, -device [testDevice] -> Device name { String }
     --outputDir, -out -> Directory containing output election record, optional for validating (always required) { String }
     --nballots, -nballots [11] -> Number of test ballots to send to server { Int }
+    --saveBallotsDir, -saveBallots -> save generated plaintext ballots in given directory { String }
+    --challengeSome, -challengeSome [false] -> randomly challenge a few ballots 
     --serverHost, -trusteeHost [localhost] -> hostname of encryption server trustee webapp  { String }
     --serverPort, -serverPort [11111] -> port of encryption server webapp { Int }
     --sslKeyStore, -keystore [egKeystore.jks] -> file path of the keystore file { String }
     --keystorePassword, -kpwd -> password for the entire keystore { String }
     --electionguardPassword, -epwd -> password for the electionguard entry { String }
-    --help, -h -> Usage info 
+    --help, -h -> Usage info    
 ````
-
+                                                
 Example:
 
 ````
@@ -391,7 +393,8 @@ Example:
   -classpath encryptclient/build/libs/encryptclient-all.jar \
   electionguard.webapps.client.RunEgkClientKt \
   --inputDir testInput/unchained \
-  --outputDir testOut/encrypt/RunEgkServer
+  --outputDir testOut/encrypt/RunEgkServer \
+  --saveBallotsDir testOut/encrypt/RunEgkServer/secret/input
 ````
 
 To use SSL in the encryption client (see [Using SSL](#using-ssl)):

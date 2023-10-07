@@ -146,7 +146,7 @@ fun runRemoteDecrypt(
     }
     // reset(client, remoteUrl) // TODO ??
 
-    val consumerIn = makeConsumer(inputDir, group)
+    val consumerIn = makeConsumer(group, inputDir)
     val tallyResult: TallyResult = consumerIn.readTallyResult().getOrThrow { IllegalStateException(it) }
     val electionInitialized = tallyResult.electionInitialized
 

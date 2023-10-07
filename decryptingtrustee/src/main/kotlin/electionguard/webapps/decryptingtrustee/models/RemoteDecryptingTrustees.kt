@@ -25,6 +25,6 @@ data class RemoteDecryptingTrusteeJson(val guardian_id: String) {
 }
 
 fun readState(group: GroupContext, guardianId: String) : DecryptingTrusteeIF {
-    val consumer = makeConsumer(trusteeDir, group, true)
+    val consumer = makeConsumer(group, trusteeDir,  true)
     return consumer.readTrustee(trusteeDir, guardianId)
 }
