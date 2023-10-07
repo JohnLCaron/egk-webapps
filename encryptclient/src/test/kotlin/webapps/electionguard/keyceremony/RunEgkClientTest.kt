@@ -14,6 +14,7 @@ class RunEgkClientTest {
                 "-in", "$homeDir/testInput/unchained",
                 "-device", "precinct42",
                 "-out", "$homeDir/testOut/encrypt/RunEgkServer",
+                "-saveBallots", "$homeDir/testOut/encrypt/RunEgkServer/secret/input",
                 "-nballots", "11",
                 "--serverHost", "localhost",
                 "--serverPort", "11111",

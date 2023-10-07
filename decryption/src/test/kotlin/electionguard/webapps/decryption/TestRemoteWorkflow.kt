@@ -109,6 +109,6 @@ fun readDecryptingTrustees(
     init: ElectionInitialized,
     present: List<Int>,
 ): List<DecryptingTrusteeIF> {
-    val consumer = makeConsumer(trusteeDir, group)
+    val consumer = makeConsumer(group, trusteeDir)
     return init.guardians.filter { present.contains(it.xCoordinate)}.map { consumer.readTrustee(trusteeDir, it.guardianId) }
 }

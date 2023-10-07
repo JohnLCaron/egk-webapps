@@ -88,7 +88,7 @@ fun main(args: Array<String>) {
     val remoteUrl = if (isSSL) "https://$serverHost:$serverPort/egk" else "http://$serverHost:$serverPort/egk"
 
     val group = productionGroup()
-    val consumerIn = makeConsumer(inputDir, group)
+    val consumerIn = makeConsumer(group, inputDir)
     println("RunRemoteKeyCeremony\n" +
             "  inputDir = '$inputDir'\n" +
             "  outputDir = '$outputDir'\n" +
