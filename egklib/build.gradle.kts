@@ -16,7 +16,7 @@ tasks {
         archiveClassifier.set("all")
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
         manifest {
-            attributes("Main-Class" to "electionguard.verifier.RunVerifierKt")
+            attributes("Main-Class" to "electionguard.cli.RunVerifierKt")
         }
         from(configurations.runtimeClasspath.get()
             .onEach { println("add from dependencies: ${it.name}") }
