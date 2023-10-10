@@ -6,7 +6,6 @@ val kotlinVersion = "1.9.10"
 val ktorVersion = "2.3.4"
 
 dependencies {
-    implementation("io.ktor:ktor-serialization-kotlinx-json-jvm:${ktorVersion}")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:${kotlinVersion}")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5:${kotlinVersion}")
 }
