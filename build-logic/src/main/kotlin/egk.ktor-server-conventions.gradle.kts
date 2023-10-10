@@ -1,3 +1,5 @@
+import gradle.kotlin.dsl.accessors._876355aa29f9023816cc3fbdd2324fe4.implementation
+
 plugins {
     id("egk.common-conventions")
     id("io.ktor.plugin")
@@ -5,6 +7,9 @@ plugins {
 }
 
 dependencies {
+    implementation("io.ktor:ktor-serialization-kotlinx-jvm")
+    implementation("io.ktor:ktor-serialization-kotlinx-json-jvm")
+
     implementation("io.ktor:ktor-server-core-jvm")
     implementation("io.ktor:ktor-server-auth-jvm")
     implementation("io.ktor:ktor-server-content-negotiation-jvm")
