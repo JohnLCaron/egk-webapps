@@ -556,7 +556,7 @@ Check contents:
 keytool -keystore clientkeystore.p12 -storepass $EG_CLIENTKEYSTORE_PASSWORD -list -v
 ````
 
-output:
+Output look something like:
 
 ````
 keytool -keystore clientkeystore.p12 -storepass crypto2 -list -v
