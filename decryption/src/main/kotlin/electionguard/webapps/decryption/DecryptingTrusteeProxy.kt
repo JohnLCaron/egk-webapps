@@ -1,8 +1,6 @@
 package electionguard.webapps.decryption
 
-import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
-import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.unwrap
 import com.github.michaelbull.result.unwrapError
 import electionguard.core.ElementModP
@@ -28,6 +26,9 @@ class DecryptingTrusteeProxy(
     val id: String,
     val xcoord: Int,
     val publicKey: ElementModP,
+    val isSSL: Boolean,
+    val clientName: String,
+    val clientPassword: String?,
 ) : DecryptingTrusteeIF {
     var initError : String? = null
 
@@ -37,7 +38,7 @@ class DecryptingTrusteeProxy(
             val response: HttpResponse = client.get(url)  {
                 headers {
                     append(HttpHeaders.Accept, "application/json")
-                    if (isSSL) basicAuth("electionguard", egPassword)
+                    if (isSSL) basicAuth(clientName, clientPassword!!)
                 }
             }
             if (response.status != HttpStatusCode.OK) {
@@ -62,7 +63,7 @@ class DecryptingTrusteeProxy(
             val response: HttpResponse = client.post(url) {
                 headers {
                     append(HttpHeaders.ContentType, "application/json")
-                    if (isSSL) basicAuth("electionguard", egPassword)
+                    if (isSSL) basicAuth(clientName, clientPassword!!)
                 }
                 setBody(DecryptRequest(texts).publishJson())
             }
@@ -86,7 +87,7 @@ class DecryptingTrusteeProxy(
             val response: HttpResponse = client.post(url) {
                 headers {
                     append(HttpHeaders.ContentType, "application/json")
-                    if (isSSL) basicAuth("electionguard", egPassword)
+                    if (isSSL) basicAuth(clientName, clientPassword!!)
                 }
                 setBody(ChallengeRequests(challenges).publishJson())
             }
@@ -114,17 +115,4 @@ class DecryptingTrusteeProxy(
         return id
     }
 
-    companion object {
-        fun create(
-            group: GroupContext,
-            client: HttpClient,
-            remoteURL: String,
-            id: String,
-            xcoord: Int,
-            publicKey: ElementModP,
-        ): Result<DecryptingTrusteeIF, String> {
-            val proxy = DecryptingTrusteeProxy(group, client, remoteURL, id, xcoord, publicKey)
-            return if (proxy.initError == null) Ok(proxy) else Err(proxy.initError!!)
-        }
-    }
 }

@@ -66,16 +66,17 @@ fun main(args: Array<String>) {
     if (isSSL) {
         ksPassword = keystorePassword!!
         egPassword = electionguardPassword!!
-  }
+    }
 
-    println("KeyCeremonyRemoteTrustee\n" +
-            "  isSSL = $isSSL\n" +
-            "  useJson = $useJson\n" +
-            "  serverPort = '$serverPort'\n" +
-            "  trusteeDir = '$trusteeDir'"
-            )
+    println(
+        "KeyCeremonyRemoteTrustee\n" +
+                "  isSSL = $isSSL\n" +
+                "  useJson = $useJson\n" +
+                "  serverPort = '$serverPort'\n" +
+                "  trusteeDir = '$trusteeDir'"
+    )
 
-            if (isSSL) {
+    if (isSSL) {
         val keyStoreFile = File(sslKeyStore)
         val keyStore: KeyStore = KeyStore.getInstance(KeyStore.getDefaultType()) // LOOK assumes jks
         keyStore.load(FileInputStream(keyStoreFile), keystorePassword!!.toCharArray())

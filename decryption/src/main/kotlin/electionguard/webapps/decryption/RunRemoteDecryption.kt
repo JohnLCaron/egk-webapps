@@ -1,8 +1,6 @@
 package electionguard.webapps.decryption
 
-import com.github.michaelbull.result.Result
-import com.github.michaelbull.result.getOrThrow
-import com.github.michaelbull.result.partition
+import com.github.michaelbull.result.*
 import electionguard.ballot.*
 import electionguard.core.GroupContext
 import electionguard.core.getSystemDate
@@ -21,11 +19,8 @@ import io.ktor.client.*
 import io.ktor.client.engine.java.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.logging.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.cli.default
-import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import java.io.FileInputStream
 import java.security.KeyStore
@@ -33,17 +28,12 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManagerFactory
 import javax.net.ssl.X509TrustManager
 
-private var keystore = ""
-private var ksPassword = ""
-var egPassword = ""
-var isSSL = false
-
+val group = productionGroup()
 private val logger = KotlinLogging.logger("RunRemoteDecryption")
-
 
 /**
  * Run Remote Decryption CLI.
- * The RunDecryptingTrustee webapp must already be running.
+ * The DecryptingTrustee webapp(s) must already be running.
  */
 fun main(args: Array<String>) {
     val parser = ArgParser("RunRemoteDecryption")
@@ -77,61 +67,49 @@ fun main(args: Array<String>) {
         shortName = "missing",
         description = "missing guardians' xcoord, comma separated, eg '2,4'"
     )
-    val sslKeyStore by parser.option(
+
+    val clientKeyStore by parser.option(
         ArgType.String,
         shortName = "keystore",
-        description = "file path of the keystore file"
-    ).default("egKeystore.jks")
-    val keystorePassword by parser.option(
+        description = "file path of the client keystore file"
+    ).default("clientkeystore.p12")
+    val clientKeystorePassword by parser.option(
         ArgType.String,
-        shortName = "kpwd",
-        description = "password for the entire keystore"
+        shortName = "ckpwd",
+        description = "password for the client keystore"
     )
-    val electionguardPassword by parser.option(
+
+    // the decrypting client name and password. Theres only one client allowed. The password must remain secret.
+    val clientName by parser.option(
         ArgType.String,
-        shortName = "epwd",
-        description = "password for the electionguard entry"
+        shortName = "client",
+        description = "client user name"
+    ).default("electionguard")
+    val clientPassword by parser.option(
+        ArgType.String,
+        shortName = "cpwd",
+        description = "client user password"
     )
+
     parser.parse(args)
 
-    isSSL = (keystorePassword != null) && (electionguardPassword != null)
-    if (isSSL) {
-        keystore = sslKeyStore
-        ksPassword = keystorePassword!!
-        egPassword = electionguardPassword!!
-    }
+    val isSSL = (clientKeystorePassword != null) && (clientPassword != null)
     val remoteUrl = if (isSSL) "https://$serverHost:$serverPort/egk" else "http://$serverHost:$serverPort/egk"
 
     println("RunRemoteDecryption starting\n   input= $inputDir\n   missing= '$missing'\n   output= $outputDir\n" +
             "   isSSL= $isSSL\n   remoteUrl= $remoteUrl")
 
-    val group = productionGroup()
-    val success = runRemoteDecrypt(
-        group,
-        inputDir,
-        outputDir,
-        remoteUrl,
-        missing,
-        createdBy)
-    println("success = $success")
-}
-
-fun runRemoteDecrypt(
-    group: GroupContext,
-    inputDir: String,
-    outputDir: String,
-    remoteUrl: String,
-    missing: String?,
-    createdBy: String?
-): Boolean {
     val starting = getSystemTimeInMillis()
 
+    // The Java engine uses the Java HTTP Client introduced in Java 11.
     val client = HttpClient(Java) {
         engine {
             protocolVersion = java.net.http.HttpClient.Version.HTTP_2
             if (isSSL) {
+                val sslSettings = SslSettings(clientKeyStore, clientKeystorePassword!!)
                 config {
-                    sslContext(SslSettings.getSslContext())
+                    // For the Java client, pass SSLContext to the sslContext function inside the config block:
+                    sslContext(sslSettings.getSslContext())
                 }
             }
         }
@@ -152,9 +130,9 @@ fun runRemoteDecrypt(
 
     // get the list of missing and present guardians
     val allGuardians = electionInitialized.guardians
-    val missingGuardianIds =  if (missing.isNullOrEmpty()) emptyList() else {
+    val missingGuardianIds = if (missing.isNullOrEmpty()) emptyList() else {
         // remove missing guardians
-        val missingX = missing.split(",").map { it.toInt() }
+        val missingX = missing!!.split(",").map { it.toInt() }
         allGuardians.filter { missingX.contains(it.xCoordinate) }.map { it.guardianId }
     }
     val presentGuardians =  allGuardians.filter { !missingGuardianIds.contains(it.guardianId) }
@@ -167,12 +145,14 @@ fun runRemoteDecrypt(
 
     // public fun <V, E> Iterable<Result<V, E>>.partition(): Pair<List<V>, List<E>> {
     val trusteeResults : List<Result<DecryptingTrusteeIF, String>> = presentGuardians.map {
-        DecryptingTrusteeProxy.create(group, client, remoteUrl, it.guardianId, it.xCoordinate, it.publicKey())
+        val proxy = DecryptingTrusteeProxy(group, client, remoteUrl, it.guardianId, it.xCoordinate, it.publicKey(),
+            isSSL, clientName, clientPassword)
+        if (proxy.initError == null) Ok(proxy) else Err(proxy.initError!!)
     }
     val (trustees, errors) = trusteeResults.partition()
     if (errors.isNotEmpty()) {
         println("FAIL runRemoteDecrypt creating trustees: ${errors.joinToString("\n ")}")
-        return false
+        return
     }
 
     val guardians = Guardians(group, tallyResult.electionInitialized.guardians)
@@ -198,7 +178,7 @@ fun runRemoteDecrypt(
 
     val took = getSystemTimeInMillis() - starting
     println("runRemoteDecrypt took $took millisecs")
-    return true
+    println("success")
 }
 
 /*
@@ -212,7 +192,9 @@ fun reset(client : HttpClient, remoteUrl : String) {
 
  */
 
-private object SslSettings {
+// from docs: "the Ktor client will be using a certificate loaded from the existing KeyStore file (keystore.jks)
+// generated for the server." This enables the client to authenticate the server.
+private class SslSettings(val keystore: String, val ksPassword : String) {
     fun getKeyStore(): KeyStore {
         val keyStoreFile = FileInputStream(keystore)
         val keyStorePassword = ksPassword.toCharArray()

@@ -6,25 +6,23 @@ import electionguard.decrypt.ChallengeRequest
 import electionguard.decrypt.DecryptingTrusteeIF
 import electionguard.publish.makeConsumer
 import electionguard.webapps.decryptingtrustee.groupContext
-import electionguard.webapps.decryptingtrustee.trusteeDir
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
-import mu.KotlinLogging
 
 @Serializable
-data class RemoteDecryptingTrusteeJson(val guardian_id: String) {
+data class RemoteDecryptingTrusteeJson(val trusteeDir : String, val isJson : Boolean, val guardianId: String) {
     @Transient
-    private val delegate = readState(groupContext, guardian_id)
+    private val delegate : DecryptingTrusteeIF = readDecryptingTrusteeState(groupContext, guardianId)
 
-    fun id() = guardian_id
+    fun id() = guardianId
     fun xCoordinate() = delegate.xCoordinate()
     fun publicKey() = delegate.guardianPublicKey()
 
     fun decrypt(texts: List<ElementModP>) = delegate.decrypt(groupContext, texts)
     fun challenge(challenges: List<ChallengeRequest>) = delegate.challenge(groupContext, challenges)
-}
 
-fun readState(group: GroupContext, guardianId: String) : DecryptingTrusteeIF {
-    val consumer = makeConsumer(group, trusteeDir,  true)
-    return consumer.readTrustee(trusteeDir, guardianId)
+    private fun readDecryptingTrusteeState(group: GroupContext, guardianId: String) : DecryptingTrusteeIF {
+        val consumer = makeConsumer(group, trusteeDir,  isJson)
+        return consumer.readTrustee(trusteeDir, guardianId)
+    }
 }
