@@ -15,7 +15,7 @@ import mu.KotlinLogging
 private val logger = KotlinLogging.logger("DecryptingTrusteeRoutes")
 private var trustees = mutableMapOf<String, RemoteDecryptingTrusteeJson>()
 
-fun Route.trusteeRouting() {
+fun Route.trusteeRouting(trusteeDir: String, isJson : Boolean) {
     get {
         if (trustees.isNotEmpty()) {
             call.respondText(trustees.values.joinToString(",") { it.id() }, status = HttpStatusCode.OK)
@@ -34,7 +34,7 @@ fun Route.trusteeRouting() {
     get("load/{id}") {
         val id = call.parameters["id"]!!
         try {
-            val trustee = RemoteDecryptingTrusteeJson(id)
+            val trustee = RemoteDecryptingTrusteeJson(trusteeDir, isJson, id)
             trustees[id] = trustee
             println("RemoteDecryptingTrustee ${trustee.id()} created")
             call.respond(trustee.publicKey().publishJson()) // ElementModP

@@ -16,10 +16,6 @@ import java.io.File
 import java.io.FileInputStream
 import java.security.KeyStore
 
-private var ksPassword = ""
-private var egPassword = ""
-var isSSL = false
-var trusteeDir = ""
 val groupContext = productionGroup(PowRadixOption.HIGH_MEMORY_USE, ProductionMode.Mode4096)
 
 fun main(args: Array<String>) {
@@ -29,11 +25,19 @@ fun main(args: Array<String>) {
         shortName = "trusteeDir",
         description = "trustee output directory"
     ).required()
+    val trusteeIsJson by parser.option(
+        ArgType.Boolean,
+        shortName = "isJson",
+        description = "trustees are in JSON format"
+    ).default(true)
+
     val serverPort by parser.option(
         ArgType.Int,
         shortName = "port",
         description = "listen on this port, default = 11190"
     ).default(11190)
+
+    // heres where the SSL certificate is stored, to authenticate to the client
     val sslKeyStore by parser.option(
         ArgType.String,
         shortName = "keystore",
@@ -47,22 +51,29 @@ fun main(args: Array<String>) {
     val electionguardPassword by parser.option(
         ArgType.String,
         shortName = "epwd",
-        description = "password for the electionguard entry"
+        description = "password for the electionguard entry in the keystore"
     )
+
+    // the decrypting client name and password. Theres only one client allowed. The password must remain secret.
+    val clientName by parser.option(
+        ArgType.String,
+        shortName = "client",
+        description = "client user name"
+    ).default("electionguard")
+    val clientPassword by parser.option(
+        ArgType.String,
+        shortName = "cpwd",
+        description = "client user password"
+    ) // default it to electionguardPassword (?)
+
     parser.parse(args)
 
-    trusteeDir = trustees
-
-    isSSL = (keystorePassword != null) && (electionguardPassword != null)
-    if (isSSL) {
-        ksPassword = keystorePassword!!
-        egPassword = electionguardPassword!!
-   }
+    val isSSL = (keystorePassword != null) && (electionguardPassword != null)
 
     println("RunDecryptingTrustee\n" +
             "  isSSL = $isSSL\n" +
             "  serverPort = '$serverPort'\n" +
-            "  trusteeDir = '$trusteeDir'\n" +
+            "  trustees = '$trustees'\n" +
             " ")
 
     if (isSSL) {
@@ -76,27 +87,37 @@ fun main(args: Array<String>) {
                 keyStore = keyStore,
                 keyAlias = "electionguard",
                 keyStorePassword = { keystorePassword!!.toCharArray() },
+                // LOOK this is the electionguard entry password in the keystore. So client may be different, i think
                 privateKeyPassword = { electionguardPassword!!.toCharArray() }) {
                 port = serverPort
                 keyStorePath = keyStoreFile
             }
-            module(Application::module)
         }
+        environment.application.module(trustees, trusteeIsJson, isSSL = true, clientName,
+            clientPassword = clientPassword?: electionguardPassword!!)
 
-        println("RunDecryptingTrustee server ready...")
+        println("RunDecryptingTrustee server start...")
         embeddedServer(Netty, environment).start(wait = true)
 
     } else {
-        println("RunDecryptingTrustee server (no SSL) ready...")
-        embeddedServer(Netty, port = serverPort, host = "localhost", module = Application::module)
-            .start(wait = true)
+        println("RunDecryptingTrustee server (no SSL) start...")
+        val environment = applicationEngineEnvironment {
+            log = LoggerFactory.getLogger("ktor.application")
+            connectors.add(EngineConnectorBuilder().withPort(serverPort))
+        }
+        environment.application.module(trustees, trusteeIsJson)
+
+        println("RunDecryptingTrustee server start...")
+        embeddedServer(Netty, environment).start(wait = true)
+        // embeddedServer(Netty, port = serverPort, host = "localhost", module = Application::module).start(wait = true)
     }
 }
 
-fun Application.module() {
-    if (isSSL) configureSecurity(egPassword)
+fun Application.module(trusteeDir : String, isJson : Boolean,
+                       isSSL : Boolean = false, clientName : String = "", clientPassword : String = "" ) {
+    if (isSSL) configureSecurity(clientName, clientPassword)
     configureMonitoring()
     configureSerialization()
     configureAdministration()
-    configureRouting()
+    configureRouting(isSSL, trusteeDir, isJson)
 }

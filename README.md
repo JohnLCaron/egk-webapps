@@ -1,6 +1,6 @@
 # ElectionGuard-Kotlin-Multiplatform Webapps
 
-_last update 9/27/2023_
+_last update 10/18/2023_
 
 [ElectionGuard-Kotlin-Multiplatform (EKM)](https://github.com/danwallach/electionguard-kotlin-multiplatform) 
 is a multiplatform Kotlin implementation of 
@@ -150,8 +150,7 @@ Options:
     --serverPort, -serverPort [11183] -> port of keyceremony trustee webapp  { Int }
     --createdBy, -createdBy -> who created (for ElectionInitialized metadata) { String }
     --sslKeyStore, -keystore [egKeystore.jks] -> file path of the keystore file { String }
-    --keystorePassword, -kpwd -> password for the keystore file { String }
-    --electionguardPassword, -epwd -> password for the electionguard entry { String }
+     --electionguardPassword, -epwd -> password for the electionguard entry { String }
     --help, -h -> Usage info 
 ````
 
@@ -216,13 +215,12 @@ To use SSL (see [Using SSL](#using-ssl)):
 
 ## Remote Decryption
 
-The election administrator runs the **decryption** program, which orchestrates the
-_Decryption_ workflow where the encrypted tally and (optionally) the challenged ballots are decrypted.
+Each trustee runs a seperate **decryptingtrustee** _process_ that starts up first and then waits for the
+decryption program to send it requests. 
 
-Each trustee runs a seperate
-**decryptingtrustee** _process_ that starts up first and then waits for the decryption program to send it
-requests. When the Decryption is done, the decrypted (aka plaintext) tally and ballots are written to the 
-election record.
+The election administrator runs the **decryption** program, which orchestrates the
+_Decryption_ workflow where the encrypted tally and the challenged ballots are decrypted.
+When the Decryption is done, the decrypted (aka plaintext) tally and ballots are written to the election record.
 
 Also see [Remote Decryption REST API](docs/RemoteDecryption.md).
 
@@ -231,14 +229,19 @@ Also see [Remote Decryption REST API](docs/RemoteDecryption.md).
 _(For debugging purposes, currently all the trustees are handled by a single KeyCeremonyRemoteTrustee server. We will
 soon add the "each trustee in its own process" production workflow)_
 
-````
-Usage: RunDecryptingTrustee options_list
+````    
+Usage: RunRemoteDecryption options_list
 Options: 
-    --trustees, -trusteeDir -> trustee output directory (always required) { String }
-    --serverPort, -port [11190] -> listen on this port, default = 11190 { Int }
-    --sslKeyStore, -keystore [egKeystore.jks] -> file path of the keystore file { String }
-    --keystorePassword, -kpwd -> password for the entire keystore { String }
-    --electionguardPassword, -epwd -> password for the electionguard entry { String }
+    --inputDir, -in -> Directory containing input election record (always required) { String }
+    --outputDir, -out -> Directory to write output election record (always required) { String }
+    --serverHost, -trusteeHost [localhost] -> hostname of decrypting trustee webapp  { String }
+    --serverPort, -serverPort [11190] -> port of decrypting trustee webapp  { Int }
+    --createdBy, -createdBy -> who created { String }
+    --missing, -missing -> missing guardians' xcoord, comma separated, eg '2,4' { String }
+    --clientKeyStore, -keystore [clientkeystore.p12] -> file path of the client keystore file { String }
+    --clientKeystorePassword, -ckpwd -> password for the client keystore { String }
+    --clientName, -client [electionguard] -> client user name { String }
+    --clientPassword, -cpwd -> client user password { String }
     --help, -h -> Usage info 
 ````
 Example:
@@ -273,8 +276,10 @@ To use SSL in decryptingtrustee (see [Using SSL](#using-ssl)):
   -classpath decryptingtrustee/build/libs/decryptingtrustee-all.jar \
   electionguard.webapps.decryptingtrustee.RunDecryptingTrusteeKt \
   -trusteeDir /home/stormy/dev/github/electionguard-kotlin-multiplatform/egklib/src/commonTest/data/workflow/someAvailableJson/private_data/trustees \
-  --keystorePassword $EG_KEYSTORE_PASSWORD \
-  --electionguardPassword $ELECTIONGUARD_SSL_PASSWORD
+  -kpwd $EG_KEYSTORE_PASSWORD \
+  -epwd $ELECTIONGUARD_SSL_PASSWORD \
+  -client CLIENT_NAME \
+  -cpwd CLIENT_PASSWORD
 ````
 
 ### The decryption program
@@ -290,9 +295,10 @@ Options:
     --serverPort, -serverPort [11190] -> port of decrypting trustee webapp  { Int }
     --createdBy, -createdBy -> who created { String }
     --missing, -missing -> missing guardians' xcoord, comma separated, eg '2,4' { String }
-    --sslKeyStore, -keystore [egKeystore.jks] -> file path of the keystore file { String }
-    --keystorePassword, -kpwd -> password for the entire keystore { String }
-    --electionguardPassword, -epwd -> password for the electionguard entry { String }
+    --clientKeyStore, -keystore [clientkeystore.p12] -> file path of the client keystore file { String }
+    --clientKeystorePassword, -ckpwd -> password for the client keystore { String }
+    --clientName, -client [electionguard] -> client user name { String }
+    --clientPassword, -cpwd -> client user password { String }
     --help, -h -> Usage info 
 ````
 
@@ -315,8 +321,9 @@ To use SSL in decryption (see [Using SSL](#using-ssl)):
   --inputDir /home/stormy/dev/github/electionguard-kotlin-multiplatform/egklib/src/commonTest/data/workflow/someAvailableJson \
   --outputDir testOut/remoteWorkflow/RunRemoteDecryptionSSL \
   --missing 1,3 \
-  --keystorePassword $EG_KEYSTORE_PASSWORD \
-  --electionguardPassword $ELECTIONGUARD_SSL_PASSWORD
+  -ckpwd $EG_CLIENTKEYSTORE_PASSWORD \
+  -client CLIENT_NAME \
+  -cpwd CLIENT_PASSWORD
 ````
 
 ## Remote Encryption
@@ -435,9 +442,12 @@ set for example in your shell startup script.
 ````
 Usage: MakeKeystore options_list
 Options: 
+    --keystoreFile, -keystore [egKeystore.jks] -> file path of the keystore file { String }
     --keystorePassword, -kpwd -> password for the entire keystore (always required) { String }
     --electionguardPassword, -epwd -> password for the electionguard certificate entry (always required) { String }
-    --keystore, -keystore [egKeystore.jks] -> write the keystore file to this path { String }
+    --domainList, -domains [127.0.0.1, 0.0.0.0, localhost] -> list of domains (comma separated) { String }
+    --validDays, -daysvalid [3] -> number of days the certificate is valid { Int }
+    --x500Principal, -x500 [CN=voting.works, OU=electionguard.webapps, O=votingworks, C=US] -> create X500 principle with this distinguished name { String }
     --help, -h -> Usage info 
 ````
 
@@ -447,8 +457,11 @@ Example
 /usr/lib/jvm/jdk-19/bin/java \
   -classpath keyceremonytrustee/build/libs/keyceremonytrustee-all.jar \
   electionguard.webapps.keystore.MakeKeystoreKt \
-  --keystorePassword $EG_KEYSTORE_PASSWORD \
-  --electionguardPassword $ELECTIONGUARD_SSL_PASSWORD
+  -kpwd $EG_KEYSTORE_PASSWORD \
+  -epwd $ELECTIONGUARD_SSL_PASSWORD \
+  -domains "localHost, 127.0.0.1" \
+  -daysvalid 30
+  
 ````
 
 Check contents with keytool:
@@ -466,17 +479,17 @@ Keystore provider: SUN
 Your keystore contains 1 entry
 
 Alias name: electionguard
-Creation date: Sep 11, 2023
+Creation date: Oct 18, 2023
 Entry type: PrivateKeyEntry
 Certificate chain length: 1
 Certificate[1]:
-Owner: CN=localhost, OU=Kotlin, O=JetBrains, C=RU
-Issuer: CN=localhost, OU=Kotlin, O=JetBrains, C=RU
-Serial number: 6ad60b7f8c3124cc
-Valid from: Mon Sep 11 10:54:42 MDT 2023 until: Thu Sep 14 10:54:42 MDT 2023
+Owner: CN=voting.works, OU=electionguard.webapps, O=votingworks, C=US
+Issuer: CN=voting.works, OU=electionguard.webapps, O=votingworks, C=US
+Serial number: 40efb4e628ba6248
+Valid from: Wed Oct 18 15:19:50 MDT 2023 until: Fri Nov 17 14:19:50 MST 2023
 Certificate fingerprints:
-	 SHA1: DC:41:27:52:39:69:FA:C6:3B:7D:22:4F:C8:A4:11:9C:A4:85:2C:85
-	 SHA256: 47:25:A7:FE:4A:25:C4:9F:12:0F:8E:CF:7A:D7:95:A6:5B:87:49:32:C7:8E:B1:C8:56:CA:55:48:30:39:14:7E
+	 SHA1: 79:33:21:B8:55:80:60:8F:FC:43:5E:79:7F:FD:5E:4A:6B:77:F7:D3
+	 SHA256: F6:AA:DD:2A:F2:96:02:98:84:C4:40:22:87:23:DF:BF:C0:30:7C:3D:A1:7B:A5:23:23:0A:62:6A:F1:47:E4:7B
 Signature algorithm name: SHA256withRSA
 Subject Public Key Algorithm: 3072-bit RSA key
 Version: 3
@@ -490,20 +503,96 @@ ExtendedKeyUsages [
 
 #2: ObjectId: 2.5.29.17 Criticality=false
 SubjectAlternativeName [
+  DNSName: localHost
   DNSName: 127.0.0.1
-  DNSName: 0.0.0.0
-  DNSName: localhost
+  IPAddress: 127.0.0.1
+]
+````
+
+Create a truststore for the client:
+
+````
+$ keytool -keystore egKeystore.jks -alias electionguard -exportcert -file electionguard.cer
+Enter keystore password:  $EG_KEYSTORE_PASSWORD
+Certificate stored in file <electionguard.cer>
+
+$ keytool -keystore clientkeystore.p12 -alias electionguard -import -file electionguard.cer
+Enter keystore password:  $EG_CLIENTKEYSTORE_PASSWORD
+Re-enter new password: $EG_CLIENTKEYSTORE_PASSWORD
+
+Owner: CN=voting.works, OU=electionguard.webapps, O=votingworks, C=US
+Issuer: CN=voting.works, OU=electionguard.webapps, O=votingworks, C=US
+Serial number: 40efb4e628ba6248
+Valid from: Wed Oct 18 15:19:50 MDT 2023 until: Fri Nov 17 14:19:50 MST 2023
+Certificate fingerprints:
+	 SHA1: 79:33:21:B8:55:80:60:8F:FC:43:5E:79:7F:FD:5E:4A:6B:77:F7:D3
+	 SHA256: F6:AA:DD:2A:F2:96:02:98:84:C4:40:22:87:23:DF:BF:C0:30:7C:3D:A1:7B:A5:23:23:0A:62:6A:F1:47:E4:7B
+Signature algorithm name: SHA256withRSA
+Subject Public Key Algorithm: 3072-bit RSA key
+Version: 3
+
+Extensions: 
+
+#1: ObjectId: 2.5.29.37 Criticality=false
+ExtendedKeyUsages [
+  serverAuth
+]
+
+#2: ObjectId: 2.5.29.17 Criticality=false
+SubjectAlternativeName [
+  DNSName: localHost
+  DNSName: 127.0.0.1
   IPAddress: 127.0.0.1
 ]
 
-
-
-*******************************************
-*******************************************
-
-
-
-Warning:
-The JKS keystore uses a proprietary format. It is recommended to migrate to PKCS12 which is an industry standard format using "keytool -importkeystore -srckeystore egKeystore.jks -destkeystore egKeystore.jks -deststoretype pkcs12".
+Trust this certificate? [no]:  yes
+Certificate was added to keystore
 
 ````
+
+Check contents:
+
+````
+keytool -keystore clientkeystore.p12 -storepass $EG_CLIENTKEYSTORE_PASSWORD -list -v
+````
+
+Output look something like:
+
+````
+keytool -keystore clientkeystore.p12 -storepass crypto2 -list -v
+Keystore type: PKCS12
+Keystore provider: SUN
+
+Your keystore contains 1 entry
+
+Alias name: electionguard
+Creation date: Oct 18, 2023
+Entry type: trustedCertEntry
+
+Owner: CN=voting.works, OU=electionguard.webapps, O=votingworks, C=US
+Issuer: CN=voting.works, OU=electionguard.webapps, O=votingworks, C=US
+Serial number: 40efb4e628ba6248
+Valid from: Wed Oct 18 15:19:50 MDT 2023 until: Fri Nov 17 14:19:50 MST 2023
+Certificate fingerprints:
+	 SHA1: 79:33:21:B8:55:80:60:8F:FC:43:5E:79:7F:FD:5E:4A:6B:77:F7:D3
+	 SHA256: F6:AA:DD:2A:F2:96:02:98:84:C4:40:22:87:23:DF:BF:C0:30:7C:3D:A1:7B:A5:23:23:0A:62:6A:F1:47:E4:7B
+Signature algorithm name: SHA256withRSA
+Subject Public Key Algorithm: 3072-bit RSA key
+Version: 3
+
+Extensions: 
+
+#1: ObjectId: 2.5.29.37 Criticality=false
+ExtendedKeyUsages [
+  serverAuth
+]
+
+#2: ObjectId: 2.5.29.17 Criticality=false
+SubjectAlternativeName [
+  DNSName: localHost
+  DNSName: 127.0.0.1
+  IPAddress: 127.0.0.1
+]
+````
+
+
