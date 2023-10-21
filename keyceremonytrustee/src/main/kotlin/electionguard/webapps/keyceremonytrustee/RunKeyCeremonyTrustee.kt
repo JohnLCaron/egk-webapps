@@ -26,6 +26,7 @@ var isSSL = false
 var trusteeDir = "tmp"
 val groupContext = productionGroup(PowRadixOption.HIGH_MEMORY_USE, ProductionMode.Mode4096)
 
+// Note that there is no reference to the config parameters.
 fun main(args: Array<String>) {
     val parser = ArgParser("RunKeyCeremonyTrustee")
     val trustees by parser.option(

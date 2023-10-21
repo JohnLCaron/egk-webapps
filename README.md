@@ -1,6 +1,6 @@
 # ElectionGuard-Kotlin-Multiplatform Webapps
 
-_last update 10/18/2023_
+_last update 10/21/2023_
 
 [ElectionGuard-Kotlin-Multiplatform (EKM)](https://github.com/danwallach/electionguard-kotlin-multiplatform) 
 is a multiplatform Kotlin implementation of 
@@ -15,30 +15,22 @@ Currently Java 17 is required.
 **Table of Contents**
 <!-- TOC -->
 * [ElectionGuard-Kotlin-Multiplatform Webapps](#electionguard-kotlin-multiplatform-webapps)
-  * [Build the Egklib fat jar](#build-the-egklib-fat-jar)
   * [Build the Webapps fat jars](#build-the-webapps-fat-jars)
   * [Remote Workflow](#remote-workflow)
   * [Remote KeyCeremony](#remote-keyceremony)
     * [The keyceremonytrustee program](#the-keyceremonytrustee-program)
     * [The keyceremony program](#the-keyceremony-program)
-  * [Remote Decryption](#remote-decryption)
-    * [The decryptingtrustee program](#the-decryptingtrustee-program)
-    * [The decryption program](#the-decryption-program)
   * [Remote Encryption](#remote-encryption)
     * [Encryption Server](#encryption-server)
     * [Encryption Client](#encryption-client)
+  * [Run Accumulate Tally](#run-accumulate-tally)
+  * [Remote Decryption](#remote-decryption)
+    * [The decryptingtrustee program](#the-decryptingtrustee-program)
+    * [The decryption program](#the-decryption-program)
+  * [Run Verifier](#run-verifier)
   * [Using SSL](#using-ssl)
     * [Make KeyStore](#make-keystore)
 <!-- TOC -->
-
-## Build the Egklib fat jar
-
-**Fat Jars** include the library and all of its dependencies, and simplify the classpath.
-
-1. Place latest egklib-jvm-2.0.0-SNAPSHOT.jar into the **libs/** directory in this repo (if needed).
-2. Execute _./gradlew fatJar_ to create the egklib fat jar at **egklib/build/libs/egklib-all.jar**.
-3. Copy the fat jar into egklib/ of the library repo, and use that repo as your working directory for its
-   [Command Line Programs](https://github.com/votingworks/electionguard-kotlin-multiplatform/blob/main/docs/CommandLineInterface.md)
 
 ## Build the Webapps fat jars
 
@@ -123,7 +115,7 @@ KeyCeremonyRemoteTrustee
     isSsl = false
     serverPort = '11183'
     trusteeDir = 'testOut/remoteWorkflow/keyceremony'
-KeyCeremonyRemoteTrustee server ready...
+KeyCeremonyRemoteTrustee server (no SSL) ready...
 ````
 
 To use SSL (see [Using SSL](#using-ssl)):
@@ -160,7 +152,7 @@ Example:
 /usr/lib/jvm/jdk-19/bin/java \
   -classpath keyceremony/build/libs/keyceremony-all.jar \
   electionguard.webapps.keyceremony.RunRemoteKeyCeremonyKt \
-  --inputDir /home/stormy/dev/github/electionguard-kotlin-multiplatform/testOut/cliWorkflow/electionRecord \
+  --inputDir /home/stormy/dev/github/electionguard-kotlin-multiplatform/egklib/src/commonTest/data/startConfigJson \
   --outputDir testOut/remoteWorkflow/keyceremony 
 ````
 
@@ -213,6 +205,122 @@ To use SSL (see [Using SSL](#using-ssl)):
   --electionguardPassword $ELECTIONGUARD_SSL_PASSWORD
 ````
 
+
+## Remote Encryption
+
+The Encryption server allows you to run ballot encryption on a
+different machine than where ballots are generated, and/or to call from a non-JVM program.
+
+Also see [Encryption Server REST API](docs/EncryptionServer.md).
+
+### Encryption Server
+
+````
+Usage: RunEgkServerKt options_list
+Options: 
+    --inputDir, -in -> Directory containing input election record (always required) { String }
+    --outputDir, -out -> Directory containing output election record (always required) { String }
+    --sslKeyStore, -keystore -> file path of the keystore file { String }
+    --keystorePassword, -kpwd -> password for the entire keystore { String }
+    --electionguardPassword, -epwd -> password for the electionguard entry { String }
+    --serverPort, -port -> listen on this port, default = 11111 { Int }
+    --help, -h -> Usage info 
+````
+
+Example:
+
+````
+/usr/lib/jvm/jdk-19/bin/java \
+  -classpath encryptserver/build/libs/encryptserver-all.jar \
+  electionguard.webapps.server.RunEgkServerKt \
+  --inputDir testOut/remoteWorkflow/keyceremony \
+  --outputDir testOut/remoteWorkflow/electionRecord
+````
+
+To use SSL in encryption server (see [Using SSL](#using-ssl)):
+
+````
+/usr/lib/jvm/jdk-19/bin/java \
+  -classpath encryptserver/build/libs/encryptserver-all.jar \
+  electionguard.webapps.server.RunEgkServerKt \
+  --inputDir testOut/remoteWorkflow/keyceremony \
+  --outputDir testOut/encrypt/RunEgkServer \
+  --keystorePassword $EG_KEYSTORE_PASSWORD \
+  --electionguardPassword $ELECTIONGUARD_SSL_PASSWORD
+````
+
+### Encryption Client
+
+The Encryption client is for integration testing of the Encryption Server, and as an example of how to use the server.
+
+Start up the Encryption Server as above before running.
+
+````
+Usage: RunEgkClientKt options_list
+Options: 
+    --inputDir, -in -> Directory containing input election record, for generating test ballots (always required) { String }
+    --device, -device [testDevice] -> Device name { String }
+    --outputDir, -out -> Directory containing output election record, optional for validating (always required) { String }
+    --nballots, -nballots [11] -> Number of test ballots to send to server { Int }
+    --saveBallotsDir, -saveBallots -> save generated plaintext ballots in given directory { String }
+    --challengeSome, -challengeSome [false] -> randomly challenge a few ballots 
+    --serverHost, -trusteeHost [localhost] -> hostname of encryption server trustee webapp  { String }
+    --serverPort, -serverPort [11111] -> port of encryption server webapp { Int }
+    --sslKeyStore, -keystore [egKeystore.jks] -> file path of the keystore file { String }
+    --keystorePassword, -kpwd -> password for the entire keystore { String }
+    --electionguardPassword, -epwd -> password for the electionguard entry { String }
+    --help, -h -> Usage info    
+````
+
+Example:
+
+````
+/usr/lib/jvm/jdk-19/bin/java \
+  -classpath encryptclient/build/libs/encryptclient-all.jar \
+  electionguard.webapps.client.RunEgkClientKt \
+  --inputDir testOut/remoteWorkflow/keyceremony \
+  --outputDir testOut/remoteWorkflow/electionRecord
+  --saveBallotsDir testOut/remoteWorkflow/electionRecord/secret/input
+````
+
+To use SSL in the encryption client (see [Using SSL](#using-ssl)):
+
+````
+/usr/lib/jvm/jdk-19/bin/java \
+  -classpath encryptclient/build/libs/encryptclient-all.jar \
+  electionguard.webapps.client.RunEgkClientKt \
+  --inputDir testOut/remoteWorkflow/keyceremony \
+  --outputDir testOut/remoteWorkflow/electionRecord \
+  --keystorePassword $EG_KEYSTORE_PASSWORD \
+  --electionguardPassword $ELECTIONGUARD_SSL_PASSWORD
+````
+
+
+## Run Accumulate Tally
+
+This is not a remote process, since no secret info is needed. Included here for completeness.
+
+````
+Usage: RunAccumulateTally options_list
+Options: 
+    --inputDir, -in -> Directory containing input ElectionInitialized record and encrypted ballots (always required) { String }
+    --outputDir, -out -> Directory to write output election record (always required) { String }
+    --name, -name -> Name of tally { String }
+    --createdBy, -createdBy -> who created { String }
+    --help, -h -> Usage info 
+````
+
+Example:
+
+````
+/usr/lib/jvm/jdk-19/bin/java \
+  -classpath libs/egklib-all.jar \
+  electionguard.cli.RunAccumulateTally \
+    -in testOut/remoteWorkflow/electionRecord \
+    -out testOut/remoteWorkflow/electionRecord 
+````
+
+
 ## Remote Decryption
 
 Each trustee runs a seperate **decryptingtrustee** _process_ that starts up first and then waits for the
@@ -230,16 +338,14 @@ _(For debugging purposes, currently all the trustees are handled by a single Key
 soon add the "each trustee in its own process" production workflow)_
 
 ````    
-Usage: RunRemoteDecryption options_list
+Usage: RunDecryptingTrustee options_list
 Options: 
-    --inputDir, -in -> Directory containing input election record (always required) { String }
-    --outputDir, -out -> Directory to write output election record (always required) { String }
-    --serverHost, -trusteeHost [localhost] -> hostname of decrypting trustee webapp  { String }
-    --serverPort, -serverPort [11190] -> port of decrypting trustee webapp  { Int }
-    --createdBy, -createdBy -> who created { String }
-    --missing, -missing -> missing guardians' xcoord, comma separated, eg '2,4' { String }
-    --clientKeyStore, -keystore [clientkeystore.p12] -> file path of the client keystore file { String }
-    --clientKeystorePassword, -ckpwd -> password for the client keystore { String }
+    --trustees, -trusteeDir -> trustee output directory (always required) { String }
+    --trusteeIsJson, -isJson [true] -> trustees are in JSON format 
+    --serverPort, -port [11190] -> listen on this port, default = 11190 { Int }
+    --sslKeyStore, -keystore [egKeystore.jks] -> file path of the keystore file { String }
+    --keystorePassword, -kpwd -> password for the entire keystore { String }
+    --electionguardPassword, -epwd -> password for the electionguard entry in the keystore { String }
     --clientName, -client [electionguard] -> client user name { String }
     --clientPassword, -cpwd -> client user password { String }
     --help, -h -> Usage info 
@@ -250,7 +356,7 @@ Example:
 /usr/lib/jvm/jdk-19/bin/java \
   -classpath decryptingtrustee/build/libs/decryptingtrustee-all.jar \
   electionguard.webapps.decryptingtrustee.RunDecryptingTrusteeKt \
-  -trusteeDir /home/stormy/dev/github/electionguard-kotlin-multiplatform/egklib/src/commonTest/data/workflow/allAvailableJson/private_data/trustees 
+  -trusteeDir testOut/remoteWorkflow/keyceremony/trustees  
 ````
 
 You should see something like:
@@ -308,8 +414,8 @@ Example:
 /usr/lib/jvm/jdk-19/bin/java \
   -classpath decryption/build/libs/decryption-all.jar \
   electionguard.webapps.decryption.RunRemoteDecryptionKt \
-  --inputDir /home/stormy/dev/github/electionguard-kotlin-multiplatform/egklib/src/commonTest/data/workflow/allAvailableJson \
-  --outputDir testOut/remoteWorkflow/RunRemoteDecryption
+  --inputDir  testOut/remoteWorkflow/electionRecord \
+  --outputDir testOut/remoteWorkflow/electionRecord
 ````
 
 To use SSL in decryption (see [Using SSL](#using-ssl)):
@@ -318,103 +424,36 @@ To use SSL in decryption (see [Using SSL](#using-ssl)):
 /usr/lib/jvm/jdk-19/bin/java \
   -classpath decryption/build/libs/decryption-all.jar \
   electionguard.webapps.decryption.RunRemoteDecryptionKt \
-  --inputDir /home/stormy/dev/github/electionguard-kotlin-multiplatform/egklib/src/commonTest/data/workflow/someAvailableJson \
-  --outputDir testOut/remoteWorkflow/RunRemoteDecryptionSSL \
+  --inputDir testOut/remoteWorkflow/electionRecord \
+  --outputDir testOut/remoteWorkflow/electionRecord \
   --missing 1,3 \
   -ckpwd $EG_CLIENTKEYSTORE_PASSWORD \
   -client CLIENT_NAME \
   -cpwd CLIENT_PASSWORD
 ````
 
-## Remote Encryption
+## Run Verifier
 
-The Encryption server allows you to run ballot encryption on a
-different machine than where ballots are generated, and/or to call from a non-JVM program.
+Here for completeness
 
-Also see [Encryption Server REST API](docs/EncryptionServer.md).
-
-
-### Encryption Server
-
-````
-Usage: RunEgkServerKt options_list
+```` 
+Usage: RunVerifier options_list
 Options: 
     --inputDir, -in -> Directory containing input election record (always required) { String }
-    --outputDir, -out -> Directory containing output election record (always required) { String }
-    --sslKeyStore, -keystore -> file path of the keystore file { String }
-    --keystorePassword, -kpwd -> password for the entire keystore { String }
-    --electionguardPassword, -epwd -> password for the electionguard entry { String }
-    --serverPort, -port -> listen on this port, default = 11111 { Int }
-    --help, -h -> Usage info 
+    --nthreads, -nthreads [11] -> Number of parallel threads to use { Int }
+    --showTime, -time [false] -> Show timing 
+    --help, -h -> Usage info
 ````
 
 Example:
 
 ````
 /usr/lib/jvm/jdk-19/bin/java \
-  -classpath encryptserver/build/libs/encryptserver-all.jar \
-  electionguard.webapps.server.RunEgkServerKt \
-  --inputDir testInput/unchained \
-  --outputDir testOut/encrypt/RunEgkServer
+  -classpath libs/egklib-all.jar \
+  electionguard.cli.RunVerifier \
+    -in testOut/remoteWorkflow/electionRecord 
 ````
 
-To use SSL in encryption server (see [Using SSL](#using-ssl)):
-
-````
-/usr/lib/jvm/jdk-19/bin/java \
-  -classpath encryptserver/build/libs/encryptserver-all.jar \
-  electionguard.webapps.server.RunEgkServerKt \
-  --inputDir testInput/unchained \
-  --outputDir testOut/encrypt/RunEgkServer \
-  --keystorePassword $EG_KEYSTORE_PASSWORD \
-  --electionguardPassword $ELECTIONGUARD_SSL_PASSWORD
-````
-
-### Encryption Client
-
-The Encryption client is for integration testing of the Encryption Server, and as an example of how to use the server.
-
-Start up the Encryption Server as above before running.
-
-````
-Usage: RunEgkClientKt options_list
-Options: 
-    --inputDir, -in -> Directory containing input election record, for generating test ballots (always required) { String }
-    --device, -device [testDevice] -> Device name { String }
-    --outputDir, -out -> Directory containing output election record, optional for validating (always required) { String }
-    --nballots, -nballots [11] -> Number of test ballots to send to server { Int }
-    --saveBallotsDir, -saveBallots -> save generated plaintext ballots in given directory { String }
-    --challengeSome, -challengeSome [false] -> randomly challenge a few ballots 
-    --serverHost, -trusteeHost [localhost] -> hostname of encryption server trustee webapp  { String }
-    --serverPort, -serverPort [11111] -> port of encryption server webapp { Int }
-    --sslKeyStore, -keystore [egKeystore.jks] -> file path of the keystore file { String }
-    --keystorePassword, -kpwd -> password for the entire keystore { String }
-    --electionguardPassword, -epwd -> password for the electionguard entry { String }
-    --help, -h -> Usage info    
-````
-                                                
-Example:
-
-````
-/usr/lib/jvm/jdk-19/bin/java \
-  -classpath encryptclient/build/libs/encryptclient-all.jar \
-  electionguard.webapps.client.RunEgkClientKt \
-  --inputDir testInput/unchained \
-  --outputDir testOut/encrypt/RunEgkServer \
-  --saveBallotsDir testOut/encrypt/RunEgkServer/secret/input
-````
-
-To use SSL in the encryption client (see [Using SSL](#using-ssl)):
-
-````
-/usr/lib/jvm/jdk-19/bin/java \
-  -classpath encryptclient/build/libs/encryptclient-all.jar \
-  electionguard.webapps.client.RunEgkClientKt \
-  --inputDir testInput/unchained \
-  --outputDir testOut/encrypt/RunEgkServer \
-  --keystorePassword $EG_KEYSTORE_PASSWORD \
-  --electionguardPassword $ELECTIONGUARD_SSL_PASSWORD
-````
 
 ## Using SSL
 

@@ -96,9 +96,40 @@ fun main(args: Array<String>) {
     val isSSL = (clientKeystorePassword != null) && (clientPassword != null)
     val remoteUrl = if (isSSL) "https://$serverHost:$serverPort/egk" else "http://$serverHost:$serverPort/egk"
 
-    println("RunRemoteDecryption starting\n   input= $inputDir\n   missing= '$missing'\n   output= $outputDir\n" +
-            "   isSSL= $isSSL\n   remoteUrl= $remoteUrl")
+    println(
+        "RunRemoteDecryption starting\n   input= $inputDir\n   missing= '$missing'\n   output= $outputDir\n" +
+                "   isSSL= $isSSL\n   remoteUrl= $remoteUrl"
+    )
 
+    val success = runRemoteDecrypt(
+        group,
+        inputDir,
+        outputDir,
+        remoteUrl,
+        missing,
+        createdBy,
+        isSSL,
+        clientKeyStore,
+        clientKeystorePassword,
+        clientName,
+        clientPassword,
+    )
+    println("success = $success")
+}
+
+fun runRemoteDecrypt(
+    group: GroupContext,
+    inputDir: String,
+    outputDir: String,
+    remoteUrl: String,
+    missing: String?,
+    createdBy: String?,
+    isSSL: Boolean,
+    clientKeyStore: String,
+    clientKeystorePassword: String?,
+    clientName: String,
+    clientPassword: String?,
+): Boolean {
     val starting = getSystemTimeInMillis()
 
     // The Java engine uses the Java HTTP Client introduced in Java 11.
@@ -135,28 +166,32 @@ fun main(args: Array<String>) {
         val missingX = missing!!.split(",").map { it.toInt() }
         allGuardians.filter { missingX.contains(it.xCoordinate) }.map { it.guardianId }
     }
-    val presentGuardians =  allGuardians.filter { !missingGuardianIds.contains(it.guardianId) }
-    val presentGuardianIds =  presentGuardians.map { it.guardianId }
+    val presentGuardians = allGuardians.filter { !missingGuardianIds.contains(it.guardianId) }
+    val presentGuardianIds = presentGuardians.map { it.guardianId }
     if (presentGuardianIds.size < electionInitialized.config.quorum) {
-        logger.atError().log("number of guardians present ${presentGuardianIds.size} < quorum ${electionInitialized.config.quorum}")
+        logger.atError()
+            .log("number of guardians present ${presentGuardianIds.size} < quorum ${electionInitialized.config.quorum}")
         throw IllegalStateException("number of guardians present ${presentGuardianIds.size} < quorum ${electionInitialized.config.quorum}")
     }
     println("runRemoteDecrypt present = $presentGuardianIds missing = $missingGuardianIds")
 
     // public fun <V, E> Iterable<Result<V, E>>.partition(): Pair<List<V>, List<E>> {
-    val trusteeResults : List<Result<DecryptingTrusteeIF, String>> = presentGuardians.map {
-        val proxy = DecryptingTrusteeProxy(group, client, remoteUrl, it.guardianId, it.xCoordinate, it.publicKey(),
-            isSSL, clientName, clientPassword)
+    val trusteeResults: List<Result<DecryptingTrusteeIF, String>> = presentGuardians.map {
+        val proxy = DecryptingTrusteeProxy(
+            group, client, remoteUrl, it.guardianId, it.xCoordinate, it.publicKey(),
+            isSSL, clientName, clientPassword
+        )
         if (proxy.initError == null) Ok(proxy) else Err(proxy.initError!!)
     }
     val (trustees, errors) = trusteeResults.partition()
     if (errors.isNotEmpty()) {
         println("FAIL runRemoteDecrypt creating trustees: ${errors.joinToString("\n ")}")
-        return
+        return false
     }
 
     val guardians = Guardians(group, tallyResult.electionInitialized.guardians)
-    val decryptor = DecryptorDoerre(group,
+    val decryptor = DecryptorDoerre(
+        group,
         tallyResult.electionInitialized.extendedBaseHash,
         tallyResult.electionInitialized.jointPublicKey(),
         guardians,
@@ -164,7 +199,7 @@ fun main(args: Array<String>) {
     )
     val decryptedTally = with(decryptor) { tallyResult.encryptedTally.decrypt() }
 
-    val publisher = makePublisher(outputDir, createNew = true, jsonSerialization = true) // LOOK
+    val publisher = makePublisher(outputDir, createNew = false, jsonSerialization = true) // LOOK
     publisher.writeDecryptionResult(
         DecryptionResult(
             tallyResult,
@@ -172,13 +207,14 @@ fun main(args: Array<String>) {
             mapOf(
                 Pair("CreatedBy", createdBy ?: "RunTrustedDecryption"),
                 Pair("CreatedOn", getSystemDate()),
-                Pair("CreatedFromDir", inputDir))
+                Pair("CreatedFromDir", inputDir)
+            )
         )
     )
 
     val took = getSystemTimeInMillis() - starting
     println("runRemoteDecrypt took $took millisecs")
-    println("success")
+    return true
 }
 
 /*
@@ -194,7 +230,7 @@ fun reset(client : HttpClient, remoteUrl : String) {
 
 // from docs: "the Ktor client will be using a certificate loaded from the existing KeyStore file (keystore.jks)
 // generated for the server." This enables the client to authenticate the server.
-private class SslSettings(val keystore: String, val ksPassword : String) {
+private class SslSettings(val keystore: String, val ksPassword: String) {
     fun getKeyStore(): KeyStore {
         val keyStoreFile = FileInputStream(keystore)
         val keyStorePassword = ksPassword.toCharArray()
