@@ -1,17 +1,13 @@
 package electionguard.webapps.decryption
 
-import electionguard.ballot.ElectionInitialized
 import electionguard.ballot.PlaintextBallot
 import electionguard.cli.RunAccumulateTally.Companion.runAccumulateBallots
 import electionguard.cli.RunBatchEncryption.Companion.batchEncryption
-import electionguard.core.GroupContext
 import electionguard.core.Stats
 import electionguard.core.productionGroup
-import electionguard.decrypt.DecryptingTrusteeIF
 import electionguard.input.RandomBallotProvider
 import electionguard.publish.makePublisher
 import electionguard.publish.readElectionRecord
-import electionguard.publish.makeConsumer
 import electionguard.verifier.Verifier
 import kotlin.test.Test
 import kotlin.test.assertTrue
@@ -49,7 +45,9 @@ class TestRemoteWorkflow {
         runAccumulateBallots(group, workingDir, workingDir, "RunWorkflow", "runWorkflowAllAvailable")
 
         // decrypt tally
-        runRemoteDecrypt(group, workingDir, workingDir, remoteUrl, null, "RunRemoteWorkflowAll")
+        runRemoteDecrypt(group, workingDir, workingDir, remoteUrl, null, "RunRemoteWorkflowAll",
+            false, "", null, "", null)
+
 
         // verify
         println("\nRun Verifier")
@@ -88,8 +86,23 @@ class TestRemoteWorkflow {
         // tally
         runAccumulateBallots(group, workingDir, workingDir, "RunWorkflow", "RunRemoteWorkflowSome")
 
+        // fun runRemoteDecrypt(
+        //    group: GroupContext,
+        //    inputDir: String,
+        //    outputDir: String,
+        //    remoteUrl: String,
+        //    missing: String?,
+        //    createdBy: String?,
+        //    isSSL: Boolean,
+        //    clientKeyStore: String,
+        //    clientKeystorePassword: String?,
+        //    clientName: String,
+        //    clientPassword: String?,
+        //): Boolean {
+
         // decrypt
-        runRemoteDecrypt(group, workingDir, workingDir, remoteUrl, "2,4", "RunRemoteWorkflowSome")
+        runRemoteDecrypt(group, workingDir, workingDir, remoteUrl, "2,4", "RunRemoteWorkflowSome",
+            false, "", null, "", null)
 
         // verify
         println("\nRun Verifier")
@@ -101,14 +114,4 @@ class TestRemoteWorkflow {
         println("Verify is $ok")
         assertTrue(ok)
     }
-}
-
-fun readDecryptingTrustees(
-    group: GroupContext,
-    trusteeDir: String,
-    init: ElectionInitialized,
-    present: List<Int>,
-): List<DecryptingTrusteeIF> {
-    val consumer = makeConsumer(group, trusteeDir)
-    return init.guardians.filter { present.contains(it.xCoordinate)}.map { consumer.readTrustee(trusteeDir, it.guardianId) }
 }

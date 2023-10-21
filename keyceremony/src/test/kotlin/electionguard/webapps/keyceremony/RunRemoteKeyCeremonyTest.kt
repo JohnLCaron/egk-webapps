@@ -1,13 +1,19 @@
 package electionguard.webapps.keyceremony
 
+import electionguard.core.productionGroup
+import electionguard.publish.Consumer
+import electionguard.publish.makeConsumer
 import kotlin.test.Test
+import kotlin.test.assertNotNull
 
+// Requires the (SSL)  KeyCeremonyTrustee app to be running.
 class RunRemoteKeyCeremonyTest {
-    private val configDir = "/home/stormy/dev/github/electionguard-kotlin-multiplatform/egklib/src/commonTest/data/startConfigProto"
-    private val outputDir = "../testOut/remoteWorkflow/RunRemoteKeyCeremonyTest"
 
     @Test
-    fun testRemoteKeyCeremonyMain() {
+    fun testRemoteKeyCeremonySSLproto() {
+        val configDir = "/home/stormy/dev/github/electionguard-kotlin-multiplatform/egklib/src/commonTest/data/startConfigProto"
+        val outputDir = "../testOut/remoteWorkflow/testRemoteKeyCeremonySSLproto"
+
         main(
             arrayOf(
                 "-in", configDir,
@@ -19,6 +25,28 @@ class RunRemoteKeyCeremonyTest {
                 "-epwd", "biotic",
             )
         )
+        val check = makeConsumer(productionGroup(), outputDir, false)
+        assertNotNull(check)
+    }
+
+    @Test
+    fun testRemoteKeyCeremonySSLjson() {
+        val configDir = "/home/stormy/dev/github/electionguard-kotlin-multiplatform/egklib/src/commonTest/data/startConfigJson"
+        val outputDir = "../testOut/remoteWorkflow/testRemoteKeyCeremonySSLjson"
+
+        main(
+            arrayOf(
+                "-in", configDir,
+                "-out", outputDir,
+                "-trusteeHost", "localhost",
+                "-serverPort", "11183",
+                "-keystore", "../egKeystore.jks",
+                "-kpwd", "crypto",
+                "-epwd", "biotic",
+            )
+        )
+        val check = makeConsumer(productionGroup(), outputDir, false)
+        assertNotNull(check)
     }
 
 }

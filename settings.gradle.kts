@@ -23,5 +23,4 @@ include ("keyceremonytrustee")
 include ("keyceremony")
 include ("decryptingtrustee")
 include ("decryption")
-include ("egklib")
 

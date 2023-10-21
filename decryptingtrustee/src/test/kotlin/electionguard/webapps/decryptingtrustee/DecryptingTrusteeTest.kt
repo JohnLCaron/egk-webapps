@@ -16,25 +16,18 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.testing.*
-import kotlinx.serialization.json.*
-import kotlin.test.*
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class DecryptingTrusteeTest {
     val trusteeDir =
         "/home/stormy/dev/github/electionguard-kotlin-multiplatform/egklib/src/commonTest/data/workflow/someAvailableJson/private_data/trustees"
 
-    init {
-        electionguard.webapps.decryptingtrustee.trusteeDir = trusteeDir
-    }
-
     @Test
     fun testGetTrustees() = testApplication {
         application {
-            configureRouting()
+            configureRouting(false, trusteeDir, true)
         }
         client.get("/egk/dtrustee").apply {
             assertEquals(HttpStatusCode.OK, status)
@@ -45,7 +38,7 @@ class DecryptingTrusteeTest {
     @Test
     fun testReset() = testApplication {
         application {
-            configureRouting()
+            configureRouting(false, trusteeDir, true)
         }
         client.post("/egk/dtrustee/reset").apply {
             assertEquals(HttpStatusCode.OK, status)
@@ -55,7 +48,7 @@ class DecryptingTrusteeTest {
     @Test
     fun testDecryptEmpty() = testApplication {
         application {
-            configureRouting()
+            configureRouting(false, trusteeDir, true)
             configureSerialization()
         }
 
@@ -76,7 +69,7 @@ class DecryptingTrusteeTest {
             headers {
                 append(HttpHeaders.ContentType, "application/json")
             }
-            setBody(DecryptRequest(texts).publishJson())
+            setBody(DecryptRequest(texts).publishJson()) // TODO
         }.apply {
             println(" = $status")
             println("body = ${bodyAsText()}")

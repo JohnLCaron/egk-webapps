@@ -18,6 +18,7 @@ import java.security.KeyStore
 
 val groupContext = productionGroup(PowRadixOption.HIGH_MEMORY_USE, ProductionMode.Mode4096)
 
+// Note this doesnt need config parameters. But trustees must be correct ones for this election record.
 fun main(args: Array<String>) {
     val parser = ArgParser("RunDecryptingTrustee")
     val trustees by parser.option(
