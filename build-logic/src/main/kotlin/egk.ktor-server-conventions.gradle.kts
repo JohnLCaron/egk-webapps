@@ -1,4 +1,3 @@
-import gradle.kotlin.dsl.accessors._876355aa29f9023816cc3fbdd2324fe4.implementation
 
 plugins {
     id("egk.common-conventions")

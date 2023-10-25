@@ -1,5 +1,19 @@
+buildscript {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
 plugins {
-    id("egk.ktor-client-conventions")
+    kotlin("jvm") version "1.9.10"
+    alias(libs.plugins.ktor)
+    alias(libs.plugins.serialization)
+    application
+}
+
+repositories {
+    mavenCentral()
 }
 
 application {
@@ -8,8 +22,10 @@ application {
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
 }
 
-val mockkVersion = "1.13.7"
-
 dependencies {
-    testImplementation("io.mockk:mockk:${mockkVersion}")
+    implementation(files("../libs/egklib-jvm-2.0.0-SNAPSHOT.jar"))
+    implementation(libs.bundles.eglib)
+    implementation(libs.bundles.ktor.client)
+
+    testImplementation(libs.bundles.ktor.client.test)
 }

@@ -6,6 +6,7 @@ import com.github.michaelbull.result.Ok
 import electionguard.core.ElementModP
 import electionguard.core.GroupContext
 import electionguard.core.SchnorrProof
+import electionguard.core.UInt256
 import electionguard.json2.*
 import electionguard.keyceremony.KeyCeremonyTrusteeIF
 import electionguard.keyceremony.KeyShare
@@ -192,13 +193,15 @@ class RemoteKeyTrusteeProxy(
         }
     }
 
-    fun saveState(): Result<Boolean, String> {
+    fun saveState(electionId : UInt256): Result<Boolean, String> {
         return runBlocking {
             val url = "$remoteURL/ktrustee/$id/saveState"
-            val response: HttpResponse = client.get(url) {
+            val response: HttpResponse = client.post(url) {
                 headers {
+                    append(HttpHeaders.ContentType, "application/json")
                     if (isSSL) basicAuth("electionguard", egPassword)
                 }
+                setBody(electionId.publishJson())
             }
             println("$id saveState status=${response.status}")
             if (response.status == HttpStatusCode.OK) Ok(true) else Err(response.toString())

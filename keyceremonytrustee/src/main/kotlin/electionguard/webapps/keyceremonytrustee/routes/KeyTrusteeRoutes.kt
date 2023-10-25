@@ -4,8 +4,10 @@ import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.unwrap
 import com.github.michaelbull.result.unwrapError
+import electionguard.core.UInt256
 import electionguard.json2.*
 import electionguard.keyceremony.EncryptedKeyShare
+import electionguard.keyceremony.PublicKeys
 import electionguard.webapps.keyceremonytrustee.groupContext
 import electionguard.webapps.keyceremonytrustee.isJson
 import electionguard.webapps.keyceremonytrustee.models.RemoteKeyTrustee
@@ -39,7 +41,7 @@ fun Route.trusteeRouting() {
                 "No RemoteKeyTrustee with id= $id",
                 status = HttpStatusCode.NotFound
             )
-        val result = rguardian.publicKeys()
+        val result : Result<PublicKeys, String> = rguardian.publicKeys()
         if (result is Ok) {
             val pk = result.unwrap()
             call.respond(pk.publishJson())
@@ -190,14 +192,17 @@ fun Route.trusteeRouting() {
         call.respond(if (isComplete) "true" else "false")
     }
 
-    get("{id}/saveState") {
+    post("{id}/saveState") {
         val id = call.parameters["id"]
         val rguardian =
-            remoteKeyTrustees.find { it.id == id } ?: return@get call.respondText(
+            remoteKeyTrustees.find { it.id == id } ?: return@post call.respondText(
                 "No RemoteKeyTrustee with id= $id",
                 status = HttpStatusCode.NotFound
             )
-        val result = rguardian.saveState(trusteeDir, isJson)
+        val electionIdJson = call.receive<UInt256Json>()
+        val electionId: UInt256 = electionIdJson.import()
+
+        val result = rguardian.saveState(trusteeDir, isJson, electionId)
         if (result is Ok) {
             call.respondText(
                 "RemoteKeyTrustee ${rguardian.id} saveState succeeded",
