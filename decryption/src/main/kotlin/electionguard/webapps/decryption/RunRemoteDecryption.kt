@@ -21,7 +21,7 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.logging.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.cli.default
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import java.io.FileInputStream
 import java.security.KeyStore
 import javax.net.ssl.SSLContext
@@ -169,8 +169,7 @@ fun runRemoteDecrypt(
     val presentGuardians = allGuardians.filter { !missingGuardianIds.contains(it.guardianId) }
     val presentGuardianIds = presentGuardians.map { it.guardianId }
     if (presentGuardianIds.size < electionInitialized.config.quorum) {
-        logger.atError()
-            .log("number of guardians present ${presentGuardianIds.size} < quorum ${electionInitialized.config.quorum}")
+        logger.error { "number of guardians present ${presentGuardianIds.size} < quorum ${electionInitialized.config.quorum}" }
         throw IllegalStateException("number of guardians present ${presentGuardianIds.size} < quorum ${electionInitialized.config.quorum}")
     }
     println("runRemoteDecrypt present = $presentGuardianIds missing = $missingGuardianIds")

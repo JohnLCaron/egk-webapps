@@ -1,9 +1,31 @@
+buildscript {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
 plugins {
-    id("egk.ktor-server-conventions")
+    kotlin("jvm") version "1.9.10"
+    alias(libs.plugins.ktor)
+    alias(libs.plugins.serialization)
+    application
+}
+
+repositories {
+    mavenCentral()
 }
 
 application {
     mainClass.set("electionguard.webapps.decryptingtrustee.RunDecryptingTrusteeKt")
     val isDevelopment: Boolean = project.ext.has("development")
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
+}
+
+dependencies {
+    implementation(files("../libs/egklib-jvm-2.0.0-SNAPSHOT.jar"))
+    implementation(libs.bundles.eglib)
+    implementation(libs.bundles.ktor.server)
+
+    testImplementation(libs.bundles.ktor.server.test)
 }

@@ -3,6 +3,8 @@ package electionguard.webapps.keyceremonytrustee.models
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.Result
+import electionguard.core.UInt256
+import electionguard.json2.UInt256Json
 
 import electionguard.keyceremony.KeyCeremonyTrustee
 import electionguard.keyceremony.PublicKeys
@@ -13,15 +15,19 @@ import electionguard.webapps.keyceremonytrustee.groupContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 
 private val logger = KotlinLogging.logger("RemoteKeyTrustee")
 
+val remoteKeyTrustees = mutableListOf<RemoteKeyTrustee>()
+
 @Serializable
-data class RemoteKeyTrustee(val id: String,
-                            val xCoordinate: Int,
-                            val nguardians: Int,
-                            val quorum: Int) {
+data class RemoteKeyTrustee(
+    val id: String,
+    val xCoordinate: Int,
+    val nguardians: Int,
+    val quorum: Int,
+) {
     @Transient
     private val delegate = KeyCeremonyTrustee(groupContext, id, xCoordinate, nguardians, quorum)
 
@@ -32,20 +38,18 @@ data class RemoteKeyTrustee(val id: String,
     fun keyShareFor(otherGuardian: String): Result<KeyShare, String> = delegate.keyShareFor(otherGuardian)
     fun receiveKeyShare(keyShare: KeyShare): Result<Boolean, String> = delegate.receiveKeyShare(keyShare)
     fun isComplete() = delegate.isComplete()
-    fun saveState(trusteeDir : String, isJson : Boolean) = delegate.saveState(trusteeDir, isJson)
-}
+    fun saveState(trusteeDir: String, isJson: Boolean, electionId: UInt256) = delegate.saveState(trusteeDir, isJson, electionId)
 
-val remoteKeyTrustees = mutableListOf<RemoteKeyTrustee>()
-
-fun KeyCeremonyTrustee.saveState(trusteeDir : String, isJson : Boolean) : Result<Boolean, String> {
-    // store the trustees in some private place.
-    val trusteePublisher = makePublisher(trusteeDir, false, isJson)
-    return try {
-        trusteePublisher.writeTrustee(trusteeDir, this)
-        println("   Write $id to $trusteeDir")
-        Ok(true)
-    } catch (t : Throwable) {
-        logger.atError().setCause(t).log { t.message }
-        Err(t.message ?: "KeyCeremonyTrustee.saveState failed=${t.message}")
+    fun KeyCeremonyTrustee.saveState(trusteeDir: String, isJson: Boolean, electionId: UInt256): Result<Boolean, String> {
+        // store the trustees in some private place.
+        val trusteePublisher = makePublisher(trusteeDir, false, isJson)
+        return try {
+            trusteePublisher.writeTrustee(trusteeDir, this, electionId)
+            println("   Write $id to $trusteeDir")
+            Ok(true)
+        } catch (t: Throwable) {
+            logger.error(t) { t.message }
+            Err(t.message ?: "KeyCeremonyTrustee.saveState failed=${t.message}")
+        }
     }
 }

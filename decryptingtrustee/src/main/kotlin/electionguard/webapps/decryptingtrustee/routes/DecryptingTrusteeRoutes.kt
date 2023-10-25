@@ -10,7 +10,7 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 
 private val logger = KotlinLogging.logger("DecryptingTrusteeRoutes")
 private var trustees = mutableMapOf<String, RemoteDecryptingTrusteeJson>()
@@ -39,7 +39,7 @@ fun Route.trusteeRouting(trusteeDir: String, isJson : Boolean) {
             println("RemoteDecryptingTrustee ${trustee.id()} created")
             call.respond(trustee.publicKey().publishJson()) // ElementModP
         } catch (t: Throwable) {
-            logger.atError().setCause(t).log(" create RemoteDecryptingTrustee $id failed ${t.message}")
+            logger.error(t) { " create RemoteDecryptingTrustee $id failed ${t.message}" }
             return@get call.respondText(
                 "RemoteDecryptingTrustee '$id' doesnt exist",
                 status = HttpStatusCode.BadRequest
