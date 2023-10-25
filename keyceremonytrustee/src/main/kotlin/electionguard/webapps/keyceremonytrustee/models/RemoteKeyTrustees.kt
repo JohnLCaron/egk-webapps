@@ -38,13 +38,13 @@ data class RemoteKeyTrustee(
     fun keyShareFor(otherGuardian: String): Result<KeyShare, String> = delegate.keyShareFor(otherGuardian)
     fun receiveKeyShare(keyShare: KeyShare): Result<Boolean, String> = delegate.receiveKeyShare(keyShare)
     fun isComplete() = delegate.isComplete()
-    fun saveState(trusteeDir: String, isJson: Boolean, electionId: UInt256) = delegate.saveState(trusteeDir, isJson, electionId)
+    fun saveState(trusteeDir: String, isJson: Boolean) = delegate.saveState(trusteeDir, isJson)
 
-    fun KeyCeremonyTrustee.saveState(trusteeDir: String, isJson: Boolean, electionId: UInt256): Result<Boolean, String> {
+    fun KeyCeremonyTrustee.saveState(trusteeDir: String, isJson: Boolean): Result<Boolean, String> {
         // store the trustees in some private place.
         val trusteePublisher = makePublisher(trusteeDir, false, isJson)
         return try {
-            trusteePublisher.writeTrustee(trusteeDir, this, electionId)
+            trusteePublisher.writeTrustee(trusteeDir, this)
             println("   Write $id to $trusteeDir")
             Ok(true)
         } catch (t: Throwable) {

@@ -157,7 +157,7 @@ fun runKeyCeremony(
     println("writeElectionInitialized to $outputDir")
 
     // tell the trustees to save their state in some private place.
-    trustees.forEach { it.saveState(electionInitialized.extendedBaseHash) }
+    trustees.forEach { it.saveState() }
     client.close()
 
     val took = getSystemTimeInMillis() - starting

@@ -193,15 +193,13 @@ class RemoteKeyTrusteeProxy(
         }
     }
 
-    fun saveState(electionId : UInt256): Result<Boolean, String> {
+    fun saveState(): Result<Boolean, String> {
         return runBlocking {
             val url = "$remoteURL/ktrustee/$id/saveState"
-            val response: HttpResponse = client.post(url) {
+            val response: HttpResponse = client.get(url) {
                 headers {
-                    append(HttpHeaders.ContentType, "application/json")
                     if (isSSL) basicAuth("electionguard", egPassword)
                 }
-                setBody(electionId.publishJson())
             }
             println("$id saveState status=${response.status}")
             if (response.status == HttpStatusCode.OK) Ok(true) else Err(response.toString())
