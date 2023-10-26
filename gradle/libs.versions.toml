@@ -29,18 +29,20 @@ ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "k
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin-version" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin-version" }
 kotlin-test-junit5 = { module = "org.jetbrains.kotlin:kotlin-test-junit5", version.ref = "kotlin-version" }
-test-common = { module = "org.jetbrains.kotlin:test-common", version.ref = "kotlin-version" }
-test-annotations-common = { module = "org.jetbrains.kotlin:test-annotations-common", version.ref = "kotlin-version" }
-kotlinx-coroutines-test = { module = "org.jetbrains.kotlin:kotlinx-coroutines-test", version.ref = "coroutines-version" }
+test-common = { module = "org.jetbrains.kotlin:kotlin-test-common", version.ref = "kotlin-version" }
+test-annotations-common = { module = "org.jetbrains.kotlin:kotlin-test-annotations-common", version.ref = "kotlin-version" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines-version" }
 ktor-server-tests-jvm = { module = "io.ktor:ktor-server-tests-jvm", version.ref = "ktor-version" }
 ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "kotlin-version" }
 junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params", version = "5.10.0" }
-
 kotest-property = { module = "io.kotest:kotest-property", version = "5.7.2" }
 mockk = { module = "io.mockk:mockk", version = "1.13.7" }
 
 [bundles]
 eglib = ["bull-result", "kotlinx-cli", "kotlinx-coroutines-core", "kotlinx-datetime", "kotlinx-serialization-json", "pbandk", "oshai-logging"]
+egtest = ["test-common", "test-annotations-common", "kotlinx-coroutines-test", "kotest-property"]
+jvmtest = ["junit-jupiter-params", "kotlin-test-junit5", "logback-classic", "mockk"]
+
 ktor-server = [
     "ktor-server-core-jvm",
     "ktor-server-auth-jvm",

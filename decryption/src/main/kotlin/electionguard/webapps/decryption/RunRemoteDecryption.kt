@@ -163,7 +163,7 @@ fun runRemoteDecrypt(
     val allGuardians = electionInitialized.guardians
     val missingGuardianIds = if (missing.isNullOrEmpty()) emptyList() else {
         // remove missing guardians
-        val missingX = missing!!.split(",").map { it.toInt() }
+        val missingX = missing.split(",").map { it.toInt() }
         allGuardians.filter { missingX.contains(it.xCoordinate) }.map { it.guardianId }
     }
     val presentGuardians = allGuardians.filter { !missingGuardianIds.contains(it.guardianId) }
