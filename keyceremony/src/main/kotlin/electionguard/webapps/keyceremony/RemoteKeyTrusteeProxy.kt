@@ -6,7 +6,6 @@ import com.github.michaelbull.result.Ok
 import electionguard.core.ElementModP
 import electionguard.core.GroupContext
 import electionguard.core.SchnorrProof
-import electionguard.core.UInt256
 import electionguard.json2.*
 import electionguard.keyceremony.KeyCeremonyTrusteeIF
 import electionguard.keyceremony.KeyShare
