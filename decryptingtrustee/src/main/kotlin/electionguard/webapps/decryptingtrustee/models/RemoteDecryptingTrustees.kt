@@ -1,5 +1,7 @@
 package electionguard.webapps.decryptingtrustee.models
 
+import com.github.michaelbull.result.Err
+import com.github.michaelbull.result.unwrap
 import electionguard.core.ElementModP
 import electionguard.core.GroupContext
 import electionguard.decrypt.ChallengeRequest
@@ -23,6 +25,11 @@ data class RemoteDecryptingTrusteeJson(val trusteeDir : String, val isJson : Boo
 
     private fun readDecryptingTrusteeState(group: GroupContext, guardianId: String) : DecryptingTrusteeIF {
         val consumer = makeConsumer(group, trusteeDir,  isJson)
-        return consumer.readTrustee(trusteeDir, guardianId)
+        val result = consumer.readTrustee(trusteeDir, guardianId)
+        if (result is Err) {
+            throw RuntimeException(result.error.toString())
+        } else {
+            return result.unwrap()
+        }
     }
 }

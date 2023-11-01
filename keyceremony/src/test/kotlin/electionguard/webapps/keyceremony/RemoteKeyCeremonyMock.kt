@@ -3,10 +3,7 @@ package electionguard.webapps.keyceremony
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.unwrap
-import electionguard.core.GroupContext
-import electionguard.core.HashedElGamalCiphertext
-import electionguard.core.productionGroup
-import electionguard.core.toUInt256
+import electionguard.core.*
 import electionguard.keyceremony.EncryptedKeyShare
 import electionguard.keyceremony.KeyShare
 import electionguard.keyceremony.keyCeremonyExchange
@@ -79,7 +76,7 @@ class RemoteKeyCeremonyMock() {
             println(exchangeResult.error)
         }
         assertTrue(exchangeResult is Err)
-        assertTrue(exchangeResult.error.contains("keyCeremonyExchange failed exchanging shares"))
+        assertTrue(exchangeResult.error.contains("keyCeremonyExchange had failures exchanging shares"))
         assertTrue(exchangeResult.error.contains("HttpResponse[http://0.0.0.0:11183/egk/ktrustee/id1/receiveEncryptedKeyShare, 400 Bad Request]"))
     }
 
@@ -133,7 +130,7 @@ class RemoteKeyCeremonyMock() {
             println(exchangeResult.error)
         }
         assertTrue(exchangeResult is Err)
-        assertTrue(exchangeResult.error.contains("keyCeremonyExchange failed exchanging shares"))
+        assertTrue(exchangeResult.error.contains("keyCeremonyExchange had failures exchanging shares"))
 //     TODO   assertTrue(exchangeResult.error.contains("HttpResponse[http://0.0.0.0:11180/ktrustee/1/receiveKeyShare, 400 Bad Request]"))
 //        assertTrue(exchangeResult.error.contains("HttpResponse[http://0.0.0.0:11180/ktrustee/1/receiveEncryptedKeyShare, 400 Bad Request]"))
     }
@@ -164,12 +161,12 @@ class RemoteKeyCeremonyMock() {
             println(exchangeResult.error)
         }
         assertTrue(exchangeResult is Err)
-        assertTrue(exchangeResult.error.contains("keyCeremonyExchange failed exchanging shares"))
+        assertTrue(exchangeResult.error.contains("keyCeremonyExchange had failures exchanging shares"))
  // TODO       assertTrue(exchangeResult.error.contains("HttpResponse[http://0.0.0.0:11180/ktrustee/1/receiveKeyShare, 400 Bad Request]"))
  //       assertTrue(exchangeResult.error.contains("HttpResponse[http://0.0.0.0:11180/ktrustee/1/receiveEncryptedKeyShare, 400 Bad Request]"))
     }
 }
 
 fun generateHashedCiphertext(group: GroupContext): HashedElGamalCiphertext {
-    return HashedElGamalCiphertext(group.TWO_MOD_P, "what".toByteArray(), group.TWO_MOD_Q.toUInt256(), 42)
+    return HashedElGamalCiphertext(group.TWO_MOD_P, "what".toByteArray(), group.TWO_MOD_Q.toUInt256safe(), 42)
 }

@@ -3,7 +3,7 @@ package electionguard.webapps.decryption
 import electionguard.ballot.PlaintextBallot
 import electionguard.cli.RunAccumulateTally.Companion.runAccumulateBallots
 import electionguard.cli.RunBatchEncryption.Companion.batchEncryption
-import electionguard.core.Stats
+import electionguard.util.Stats
 import electionguard.core.productionGroup
 import electionguard.input.RandomBallotProvider
 import electionguard.publish.makePublisher
