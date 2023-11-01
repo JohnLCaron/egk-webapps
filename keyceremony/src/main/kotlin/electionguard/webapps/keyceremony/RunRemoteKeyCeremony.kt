@@ -99,8 +99,12 @@ fun main(args: Array<String>) {
         println("  keystore = '$keystore'")
     }
 
-    val config = consumerIn.readElectionConfig().getOrThrow { IllegalStateException(it) }
-    runKeyCeremony(group, remoteUrl, inputDir, config, outputDir, consumerIn.isJson(), createdBy)
+    val configResult = consumerIn.readElectionConfig()
+    if (configResult is Err) {
+        throw RuntimeException(configResult.error.toString())
+    } else {
+        runKeyCeremony(group, remoteUrl, inputDir, configResult.unwrap(), outputDir, consumerIn.isJson(), createdBy)
+    }
 }
 
 fun runKeyCeremony(

@@ -11,6 +11,7 @@ import electionguard.keyceremony.KeyCeremonyTrusteeIF
 import electionguard.keyceremony.KeyShare
 import electionguard.keyceremony.PublicKeys
 import electionguard.keyceremony.EncryptedKeyShare
+import electionguard.util.ErrorMessages
 
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -71,15 +72,16 @@ class RemoteKeyTrusteeProxy(
             } else {
                 try {
                     val publicKeysJson: PublicKeysJson = response.body()
-                    val publicKeys = publicKeysJson.import(group)
+                    val errs = ErrorMessages("publicKeysJson")
+                    val publicKeys = publicKeysJson.import(group, errs)
                     if (publicKeys == null) {
-                        Err("$id error getting publicKeys = ${response.status}")
+                        Err("$id error getting publicKeys = ${errs}")
                     } else {
                         this@RemoteKeyTrusteeProxy.publicKeys = publicKeys
                         Ok(publicKeys)
                     }
                 } catch (t : Throwable) {
-                    Err(t.message?: "exception importing publicKeys")
+                    Err("Exception= ${t.message} ${t.stackTraceToString()}")
                 }
             }
         }

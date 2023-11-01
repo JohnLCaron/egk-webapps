@@ -7,6 +7,7 @@ import electionguard.ballot.EncryptedBallot
 import electionguard.ballot.PlaintextBallot
 import electionguard.core.GroupContext
 import electionguard.json2.*
+import electionguard.util.ErrorMessages
 
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -64,9 +65,14 @@ class RemoteEncryptorProxy(
                 setBody(ballot.publishJson())
             }
             println("RemoteEncryptorProxy encryptAndCastBallot for ballotId=${ballot.ballotId} = ${response.status}")
-            val eballotJson: EncryptedBallotJson = response.body()
-            val eballot = eballotJson.import(group)
-            if (response.status == HttpStatusCode.OK) Ok(eballot) else Err(response.toString())
+            if (response.status != HttpStatusCode.OK) {
+                Err(response.toString())
+            } else {
+                val eballotJson: EncryptedBallotJson = response.body()
+                val errs = ErrorMessages("encryptAndCastBallot")
+                val eballot = eballotJson.import(group, errs)
+                if (errs.hasErrors()) Err(errs.toString()) else Ok(eballot!!)
+            }
         }
     }
 

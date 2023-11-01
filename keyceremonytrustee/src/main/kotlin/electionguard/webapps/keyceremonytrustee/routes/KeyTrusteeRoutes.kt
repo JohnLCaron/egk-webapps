@@ -7,6 +7,7 @@ import com.github.michaelbull.result.unwrapError
 import electionguard.json2.*
 import electionguard.keyceremony.EncryptedKeyShare
 import electionguard.keyceremony.PublicKeys
+import electionguard.util.ErrorMessages
 import electionguard.webapps.keyceremonytrustee.groupContext
 import electionguard.webapps.keyceremonytrustee.isJson
 import electionguard.webapps.keyceremonytrustee.models.RemoteKeyTrustee
@@ -60,9 +61,9 @@ fun Route.trusteeRouting() {
                 status = HttpStatusCode.NotFound
             )
         val publicKeysJson = call.receive<PublicKeysJson>()
-        val publicKeysResult = publicKeysJson.importResult(groupContext)
-        if (publicKeysResult is Ok) {
-            val publicKeys = publicKeysResult.unwrap()
+        val errs = ErrorMessages("receivePublicKeys")
+        val publicKeys = publicKeysJson.import(groupContext, errs)
+        if (publicKeys != null) {
             val result = rguardian.receivePublicKeys(publicKeys)
             if (result is Ok) {
                 call.respondText(
@@ -77,7 +78,7 @@ fun Route.trusteeRouting() {
             }
         } else {
             call.respondText(
-                "RemoteKeyTrustee ${rguardian.id} receivePublicKeys importPublicKeys failed ${publicKeysResult.unwrapError()}",
+                "RemoteKeyTrustee ${rguardian.id} receivePublicKeys importPublicKeys failed ${errs}",
                 status = HttpStatusCode.InternalServerError
             )
         }

@@ -156,7 +156,11 @@ fun runRemoteDecrypt(
     // reset(client, remoteUrl) // TODO ??
 
     val consumerIn = makeConsumer(group, inputDir)
-    val tallyResult: TallyResult = consumerIn.readTallyResult().getOrThrow { IllegalStateException(it) }
+    val result = consumerIn.readTallyResult()
+    if (result is Err) {
+        throw RuntimeException(result.error.toString())
+    }
+    val tallyResult: TallyResult = result.unwrap()
     val electionInitialized = tallyResult.electionInitialized
 
     // get the list of missing and present guardians
