@@ -2,6 +2,7 @@ package electionguard.webapps.decryption
 
 import com.github.michaelbull.result.*
 import electionguard.ballot.*
+import electionguard.cli.RunTrustedTallyDecryption
 import electionguard.core.GroupContext
 import electionguard.core.getSystemDate
 import electionguard.core.getSystemTimeInMillis
@@ -11,6 +12,7 @@ import electionguard.decrypt.DecryptorDoerre
 import electionguard.decrypt.Guardians
 import electionguard.publish.makeConsumer
 import electionguard.publish.makePublisher
+import electionguard.util.ErrorMessages
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.required
@@ -101,20 +103,24 @@ fun main(args: Array<String>) {
                 "   isSSL= $isSSL\n   remoteUrl= $remoteUrl"
     )
 
-    val success = runRemoteDecrypt(
-        group,
-        inputDir,
-        outputDir,
-        remoteUrl,
-        missing,
-        createdBy,
-        isSSL,
-        clientKeyStore,
-        clientKeystorePassword,
-        clientName,
-        clientPassword,
-    )
-    println("success = $success")
+    try {
+        val success = runRemoteDecrypt(
+            group,
+            inputDir,
+            outputDir,
+            remoteUrl,
+            missing,
+            createdBy,
+            isSSL,
+            clientKeyStore,
+            clientKeystorePassword,
+            clientName,
+            clientPassword,
+        )
+        println("success = $success")
+    } catch (t: Throwable) {
+        logger.error { "Exception= ${t.message} ${t.stackTraceToString()}" }
+    }
 }
 
 fun runRemoteDecrypt(
@@ -200,7 +206,12 @@ fun runRemoteDecrypt(
         guardians,
         trustees,
     )
-    val decryptedTally = with(decryptor) { tallyResult.encryptedTally.decrypt() }
+    val errs = ErrorMessages("RunRemoteDecryption")
+    val decryptedTally = with(decryptor) { tallyResult.encryptedTally.decrypt(errs) }
+    if (decryptedTally == null) {
+        logger.error { "${errs}" }
+        return false
+    }
 
     val publisher = makePublisher(outputDir, createNew = false, jsonSerialization = true) // LOOK
     publisher.writeDecryptionResult(
