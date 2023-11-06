@@ -26,7 +26,7 @@ class EncryptionService private constructor(
     val chainConfirmationCodes : Boolean
     val configBaux0 : ByteArray
 
-    val encryptors = mutableMapOf<String, AddEncryptedBallot>()
+    private val encryptors = mutableMapOf<String, AddEncryptedBallot>()
 
     init {
         val electionRecord = readElectionRecord(group, inputDir)
