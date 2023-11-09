@@ -279,7 +279,7 @@ Example:
   -classpath encryptclient/build/libs/encryptclient-all.jar \
   electionguard.webapps.client.RunEgkClientKt \
   --inputDir testOut/remoteWorkflow/keyceremony \
-  --outputDir testOut/remoteWorkflow/electionRecord
+  --outputDir testOut/remoteWorkflow/electionRecord \
   --saveBallotsDir testOut/remoteWorkflow/electionRecord/secret/input
 ````
 
