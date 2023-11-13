@@ -11,6 +11,7 @@ import electionguard.input.RandomBallotProvider
 import electionguard.publish.makeConsumer
 import electionguard.publish.makePublisher
 import electionguard.publish.readElectionRecord
+import electionguard.util.ErrorMessages
 import electionguard.verifier.VerifyEncryptedBallots
 
 import io.ktor.client.*
@@ -213,12 +214,14 @@ fun verifyOutput(group: GroupContext, outputDir: String) {
     )
 
     // Note we are verifying all ballots, not just CAST
-    val verifierResult = verifier.verifyBallots(record.encryptedAllBallots { true })
-    println("verifyEncryptedBallots: $verifierResult")
+    val errs = ErrorMessages("EgkClient verify encrypted ballots")
+    verifier.verifyBallots(record.encryptedAllBallots { true }, errs)
+    println(errs)
 
     if (record.config().chainConfirmationCodes) {
-        val chainResult = verifier.verifyConfirmationChain(record)
-        println("verifyChain: $chainResult")
+        val chainErrs = ErrorMessages("EgkClient verify encrypted ballot chain")
+        verifier.verifyConfirmationChain(record, chainErrs)
+        println(errs)
     }
 }
 

@@ -14,6 +14,7 @@ import electionguard.encrypt.AddEncryptedBallot
 import electionguard.encrypt.CiphertextBallot
 import electionguard.publish.makePublisher
 import electionguard.publish.readElectionRecord
+import electionguard.util.ErrorMessages
 
 class EncryptionService private constructor(
         val group: GroupContext,
@@ -26,7 +27,7 @@ class EncryptionService private constructor(
     val chainConfirmationCodes : Boolean
     val configBaux0 : ByteArray
 
-    val encryptors = mutableMapOf<String, AddEncryptedBallot>()
+    private val encryptors = mutableMapOf<String, AddEncryptedBallot>()
 
     init {
         val electionRecord = readElectionRecord(group, inputDir)
@@ -46,7 +47,10 @@ class EncryptionService private constructor(
             AddEncryptedBallot(
                 group,
                 manifest,
-                electionInit,
+                electionInit.config.chainConfirmationCodes,
+                electionInit.config.configBaux0,
+                electionInit.jointPublicKey(),
+                electionInit.extendedBaseHash,
                 device,
                 outputDir,
                 "${outputDir}/invalidDir",
@@ -55,17 +59,21 @@ class EncryptionService private constructor(
         }
     }
 
-    fun encrypt(device: String, ballot: PlaintextBallot) : Result<CiphertextBallot, String> {
+    fun encrypt(device: String, ballot: PlaintextBallot) : Result<CiphertextBallot, ErrorMessages> {
         val encryptor = encryptorForDevice(device)
-        return encryptor.encrypt(ballot)
+        val errs = ErrorMessages("encrypt")
+        val eballot = encryptor.encrypt(ballot, errs)
+        return if (errs.hasErrors()) Err(errs) else Ok(eballot!!)
     }
 
-    fun encryptAndCast(device: String, ballot: PlaintextBallot) : Result<EncryptedBallot, String> {
+    fun encryptAndCast(device: String, ballot: PlaintextBallot) : Result<EncryptedBallot, ErrorMessages> {
         val encryptor = encryptorForDevice(device)
-        return encryptor.encryptAndCast(ballot)
+        val errs = ErrorMessages("encryptAndCast")
+        val eballot = encryptor.encryptAndCast(ballot, errs)
+        return if (errs.hasErrors()) Err(errs) else Ok(eballot!!)
     }
 
-    fun submit(device: String, ccode: String, state: EncryptedBallot.BallotState) : Result<Boolean, String> {
+    fun submit(device: String, ccode: String, state: EncryptedBallot.BallotState) : Result<EncryptedBallot, String> {
         try {
             val encryptor = encryptorForDevice(device)
             val ba = ccode.fromHex() ?: return Err("illegal confirmation code")
