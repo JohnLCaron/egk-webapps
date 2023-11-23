@@ -145,7 +145,6 @@ fun main(args: Array<String>) {
         return
     }
 
-    val group = productionGroup()
     val electionRecord = readElectionRecord(group, inputDir)
 
     // encrypt randomly generated ballots
