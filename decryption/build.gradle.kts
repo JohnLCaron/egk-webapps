@@ -23,7 +23,7 @@ application {
 }
 
 dependencies {
-    implementation(files("../libs/egklib-jvm-2.0.0-SNAPSHOT.jar"))
+    implementation(files("../libs/egklib-jvm-2.0.4-SNAPSHOT.jar"))
     implementation(libs.bundles.eglib)
     implementation(libs.bundles.ktor.client)
 

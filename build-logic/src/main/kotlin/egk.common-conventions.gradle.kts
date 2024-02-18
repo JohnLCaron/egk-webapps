@@ -26,7 +26,7 @@ dependencies {
     }
 
     // TODO use versionCatalogs for the ones with versions ??
-    implementation(files("../libs/egklib-jvm-2.0.0-SNAPSHOT.jar"))
+    implementation(files("../libs/egklib-jvm-2.0.4-SNAPSHOT.jar"))
     implementation("com.michael-bull.kotlin-result:kotlin-result:$resultVersion")
     implementation("pro.streem.pbandk:pbandk-runtime:$pbandkVersion")
     implementation("io.github.microutils:kotlin-logging:$microutilsLoggingVersion")
