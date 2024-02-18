@@ -4,7 +4,7 @@ _last update 10/21/2023_
 
 [ElectionGuard-Kotlin-Multiplatform (EKM)](https://github.com/danwallach/electionguard-kotlin-multiplatform) 
 is a multiplatform Kotlin implementation of 
-[ElectionGuard](https://github.com/microsoft/electionguard), version 2.0.0, available under an MIT-style open source 
+[ElectionGuard](https://github.com/microsoft/electionguard), version 2.0, available under an MIT-style open source 
 [License](LICENSE). 
 
 This repo contains web applications built on top of that library,

@@ -38,11 +38,31 @@ class TestRemoteWorkflow {
         publisher.writePlaintextBallot(ballotsDir, ballots)
         println("RandomBallotProvider created ${ballots.size} ballots")
 
+        //         fun batchEncryption(
+        //            group: GroupContext,
+        //            inputDir: String,
+        //            ballotDir: String,
+        //            device: String,
+        //            outputDir: String?,
+        //            encryptDir: String?,
+        //            invalidDir: String?,
+        //            nthreads: Int,
+        //            createdBy: String?,
+        //            check: CheckType = CheckType.None,
+        //            cleanOutput: Boolean = false,
+        //            anonymize: Boolean = false,
         // encrypt
-        batchEncryption(group, keyceremonyDir, workingDir, ballotsDir, invalidDir, "testDevice", nthreads, "runWorkflowAllAvailable")
+        batchEncryption(group, keyceremonyDir, ballotsDir, device = "testDevice", workingDir, workingDir, invalidDir, nthreads, "runWorkflowAllAvailable")
 
+        //         fun runAccumulateBallots(
+        //            group: GroupContext,
+        //            inputDir: String,
+        //            outputDir: String,
+        //            encryptDir: String?,
+        //            name: String,
+        //            createdBy: String
         // tally
-        runAccumulateBallots(group, workingDir, workingDir, "RunWorkflow", "runWorkflowAllAvailable")
+        runAccumulateBallots(group, workingDir, workingDir, null, "RunWorkflow", "runWorkflowAllAvailable")
 
         // decrypt tally
         runRemoteDecrypt(group, workingDir, workingDir, remoteUrl, null, "RunRemoteWorkflowAll",
@@ -81,10 +101,10 @@ class TestRemoteWorkflow {
         println("RandomBallotProvider created ${ballots.size} ballots")
 
         // encrypt
-        batchEncryption(group, keyceremonyDir, workingDir, ballotsDir, invalidDir, "testDevice", nthreads, "RunRemoteWorkflowSome")
+        batchEncryption(group, keyceremonyDir, ballotsDir, device = "testDevice", workingDir, workingDir, invalidDir, nthreads, "RunRemoteWorkflowSome")
 
         // tally
-        runAccumulateBallots(group, workingDir, workingDir, "RunWorkflow", "RunRemoteWorkflowSome")
+        runAccumulateBallots(group, workingDir, workingDir, null, "RunWorkflow", "RunRemoteWorkflowSome")
 
         // fun runRemoteDecrypt(
         //    group: GroupContext,

@@ -168,5 +168,6 @@ class RemoteKeyCeremonyMock() {
 }
 
 fun generateHashedCiphertext(group: GroupContext): HashedElGamalCiphertext {
-    return HashedElGamalCiphertext(group.TWO_MOD_P, "what".toByteArray(), group.TWO_MOD_Q.toUInt256safe(), 42)
+    val two = group.binaryToElementModP(ByteArray(3) { 2 })!!
+    return HashedElGamalCiphertext(two, "what".toByteArray(), group.TWO_MOD_Q.toUInt256safe(), 42)
 }
