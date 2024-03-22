@@ -1,6 +1,6 @@
 # EGK Webapps
 
-_last update 03/08/24_
+_last update 03/22/24_
 
 These are webapps built on top of the [Egk Elliptic Curves library](https://github.com/JohnLCaron/egk-ec),
 and the [Verificatum library](https://www.verificatum.org/, including the option to use the Verificatum C library
