@@ -3,18 +3,19 @@ package electionguard.webapps.server.models
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.Result
-import electionguard.ballot.ElectionInitialized
-import electionguard.ballot.EncryptedBallot
-import electionguard.ballot.Manifest
-import electionguard.ballot.PlaintextBallot
-import electionguard.core.*
-import electionguard.core.Base16.fromHex
+import org.cryptobiotic.eg.election.ElectionInitialized
+import org.cryptobiotic.eg.election.EncryptedBallot
+import org.cryptobiotic.eg.election.Manifest
+import org.cryptobiotic.eg.election.PlaintextBallot
+import org.cryptobiotic.eg.core.*
+import org.cryptobiotic.eg.core.Base16.fromHex
 
-import electionguard.encrypt.AddEncryptedBallot
-import electionguard.encrypt.CiphertextBallot
-import electionguard.publish.makePublisher
-import electionguard.publish.readElectionRecord
-import electionguard.util.ErrorMessages
+import org.cryptobiotic.eg.encrypt.AddEncryptedBallot
+import org.cryptobiotic.eg.encrypt.PendingEncryptedBallot
+import org.cryptobiotic.eg.input.BallotInputValidation
+import org.cryptobiotic.eg.publish.makePublisher
+import org.cryptobiotic.eg.publish.readElectionRecord
+import org.cryptobiotic.util.ErrorMessages
 
 class EncryptionService private constructor(
         val group: GroupContext,
@@ -28,9 +29,10 @@ class EncryptionService private constructor(
     val configBaux0 : ByteArray
 
     private val encryptors = mutableMapOf<String, AddEncryptedBallot>()
+    private val ballotValidator: BallotInputValidation
 
     init {
-        val electionRecord = readElectionRecord(group, inputDir)
+        val electionRecord = readElectionRecord(inputDir)
         manifest = electionRecord.manifest()
         val config = electionRecord.config()
         chainConfirmationCodes = config.chainConfirmationCodes
@@ -38,18 +40,35 @@ class EncryptionService private constructor(
 
         electionInit = electionRecord.electionInit()!!
         isJson = electionRecord.isJson()
-        val publisher = makePublisher(outputDir, false, isJson)
+        val publisher = makePublisher(outputDir, false)
         publisher.writeElectionInitialized(electionInit)
+
+        ballotValidator = BallotInputValidation(manifest)
     }
 
     private fun encryptorForDevice(device : String) : AddEncryptedBallot {
+
+    /* public final class AddEncryptedBallot public constructor(
+            manifest: org.cryptobiotic.eg.election.Manifest,
+            chaining: kotlin.Boolean,
+            configBaux0: kotlin.ByteArray,
+            jointPublicKey: org.cryptobiotic.eg.core.ElGamalPublicKey,
+            extendedBaseHash: org.cryptobiotic.eg.core.UInt256,
+            device: kotlin.String,
+            outputDir: kotlin.String,
+            invalidDir: kotlin.String,
+            isJson: kotlin.Boolean
+        ) : java.io.Closeable {
+
+     */
+
         return encryptors.getOrPut(device) {
             AddEncryptedBallot(
-                group,
                 manifest,
+                ballotValidator,
                 electionInit.config.chainConfirmationCodes,
                 electionInit.config.configBaux0,
-                electionInit.jointPublicKey(),
+                electionInit.jointPublicKey,
                 electionInit.extendedBaseHash,
                 device,
                 outputDir,
@@ -59,7 +78,7 @@ class EncryptionService private constructor(
         }
     }
 
-    fun encrypt(device: String, ballot: PlaintextBallot) : Result<CiphertextBallot, ErrorMessages> {
+    fun encrypt(device: String, ballot: PlaintextBallot) : Result<PendingEncryptedBallot, ErrorMessages> {
         val encryptor = encryptorForDevice(device)
         val errs = ErrorMessages("encrypt")
         val eballot = encryptor.encrypt(ballot, errs)

@@ -3,13 +3,13 @@ package electionguard.webapps.keyceremony
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.getOrThrow
 import com.github.michaelbull.result.unwrap
-import electionguard.ballot.ElectionConfig
-import electionguard.core.GroupContext
-import electionguard.core.getSystemTimeInMillis
-import electionguard.core.productionGroup
-import electionguard.keyceremony.keyCeremonyExchange
-import electionguard.publish.makeConsumer
-import electionguard.publish.makePublisher
+import org.cryptobiotic.eg.election.ElectionConfig
+import org.cryptobiotic.eg.core.GroupContext
+import org.cryptobiotic.eg.core.getSystemTimeInMillis
+import org.cryptobiotic.eg.core.productionGroup
+import org.cryptobiotic.eg.keyceremony.keyCeremonyExchange
+import org.cryptobiotic.eg.publish.makeConsumer
+import org.cryptobiotic.eg.publish.makePublisher
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.required
@@ -88,7 +88,7 @@ fun main(args: Array<String>) {
     val remoteUrl = if (isSSL) "https://$serverHost:$serverPort/egk" else "http://$serverHost:$serverPort/egk"
 
     val group = productionGroup()
-    val consumerIn = makeConsumer(group, inputDir)
+    val consumerIn = makeConsumer(inputDir)
     println("RunRemoteKeyCeremony\n" +
             "  inputDir = '$inputDir'\n" +
             "  outputDir = '$outputDir'\n" +
@@ -156,7 +156,7 @@ fun runKeyCeremony(
             Pair("CreatedFrom", inputDir),
         )
     )
-    val publisher = makePublisher(outputDir, false, isJson)
+    val publisher = makePublisher(outputDir, false)
     publisher.writeElectionInitialized(electionInitialized)
     println("writeElectionInitialized to $outputDir")
 

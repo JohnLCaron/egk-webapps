@@ -1,14 +1,12 @@
 package webapps.electionguard
 
-import electionguard.core.PowRadixOption
-import electionguard.core.ProductionMode
-import electionguard.core.productionGroup
-import electionguard.json2.EncryptedKeyShareJson
-import electionguard.json2.KeyShareJson
-import electionguard.json2.PublicKeysJson
-import electionguard.json2.import
-import electionguard.keyceremony.EncryptedKeyShare
-import electionguard.keyceremony.KeyShare
+import org.cryptobiotic.eg.core.productionGroup
+import org.cryptobiotic.eg.publish.json.EncryptedKeyShareJson
+import org.cryptobiotic.eg.publish.json.KeyShareJson
+import org.cryptobiotic.eg.publish.json.PublicKeysJson
+import org.cryptobiotic.eg.publish.json.import
+import org.cryptobiotic.eg.keyceremony.EncryptedKeyShare
+import org.cryptobiotic.eg.keyceremony.KeyShare
 import electionguard.webapps.keyceremonytrustee.models.remoteKeyTrustees
 import electionguard.webapps.keyceremonytrustee.plugins.configureRouting
 import electionguard.webapps.keyceremonytrustee.plugins.configureSerialization
@@ -21,7 +19,7 @@ import kotlin.test.*
 import io.ktor.server.testing.*
 
 class KeyCeremonyTrusteeTest {
-    val group = productionGroup(PowRadixOption.HIGH_MEMORY_USE, ProductionMode.Mode4096)
+    val group = productionGroup()
 
     @Test
     fun testGetEmptyTrusteeList() = testApplication {

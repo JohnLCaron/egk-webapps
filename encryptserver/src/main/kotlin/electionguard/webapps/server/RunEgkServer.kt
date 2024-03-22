@@ -1,8 +1,6 @@
 package electionguard.webapps.server
 
-import electionguard.core.PowRadixOption
-import electionguard.core.ProductionMode
-import electionguard.core.productionGroup
+import org.cryptobiotic.eg.core.productionGroup
 import electionguard.webapps.server.models.EncryptionService
 import electionguard.webapps.server.plugins.*
 import io.ktor.server.application.*
@@ -60,7 +58,7 @@ fun main(args: Array<String>) {
             "  serverPort = '$serverPort'\n" +
             " ")
 
-    val groupContext = productionGroup(PowRadixOption.HIGH_MEMORY_USE, ProductionMode.Mode4096)
+    val groupContext = productionGroup()
     EncryptionService.initialize(groupContext, inputDir, outputDir)
 
     if (isSSL) {

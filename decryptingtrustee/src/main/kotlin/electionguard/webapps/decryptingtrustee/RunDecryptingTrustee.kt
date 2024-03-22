@@ -1,9 +1,7 @@
 package electionguard.webapps.decryptingtrustee
 
 import io.ktor.server.application.*
-import electionguard.core.PowRadixOption
-import electionguard.core.ProductionMode
-import electionguard.core.productionGroup
+import org.cryptobiotic.eg.core.productionGroup
 import electionguard.webapps.decryptingtrustee.plugins.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
@@ -16,7 +14,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.security.KeyStore
 
-val groupContext = productionGroup(PowRadixOption.HIGH_MEMORY_USE, ProductionMode.Mode4096)
+val groupContext = productionGroup()
 
 // Note this doesnt need config parameters. But trustees must be correct ones for this election record.
 fun main(args: Array<String>) {

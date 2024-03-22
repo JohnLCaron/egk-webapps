@@ -4,10 +4,10 @@ import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.unwrap
 import com.github.michaelbull.result.unwrapError
-import electionguard.json2.*
-import electionguard.keyceremony.EncryptedKeyShare
-import electionguard.keyceremony.PublicKeys
-import electionguard.util.ErrorMessages
+import org.cryptobiotic.eg.publish.json.*
+import org.cryptobiotic.eg.keyceremony.EncryptedKeyShare
+import org.cryptobiotic.eg.keyceremony.PublicKeys
+import org.cryptobiotic.util.ErrorMessages
 import electionguard.webapps.keyceremonytrustee.groupContext
 import electionguard.webapps.keyceremonytrustee.isJson
 import electionguard.webapps.keyceremonytrustee.models.RemoteKeyTrustee

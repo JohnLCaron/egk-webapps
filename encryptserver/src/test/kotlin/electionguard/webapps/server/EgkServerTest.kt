@@ -8,13 +8,13 @@ import io.ktor.server.testing.*
 import kotlinx.serialization.json.*
 import kotlin.test.*
 
-import electionguard.ballot.PlaintextBallot
-import electionguard.core.productionGroup
-import electionguard.input.RandomBallotProvider
-import electionguard.json2.publishJson
-import electionguard.json2.EncryptionResponseJson
-import electionguard.publish.makePublisher
-import electionguard.publish.readElectionRecord
+import org.cryptobiotic.eg.election.PlaintextBallot
+import org.cryptobiotic.eg.core.productionGroup
+import org.cryptobiotic.eg.input.RandomBallotProvider
+import org.cryptobiotic.eg.publish.json.publishJson
+import org.cryptobiotic.eg.publish.json.EncryptionResponseJson
+import org.cryptobiotic.eg.publish.makePublisher
+import org.cryptobiotic.eg.publish.readElectionRecord
 import electionguard.webapps.server.models.EncryptionService
 import electionguard.webapps.server.plugins.configureRouting
 import electionguard.webapps.server.plugins.configureSerialization
@@ -25,10 +25,10 @@ class EgkServerTest {
     val group = productionGroup()
 
     init {
-        val electionRecord = readElectionRecord(group, inputDir)
+        val electionRecord = readElectionRecord(inputDir)
         val electionInit = electionRecord.electionInit()!!
         // clean out the output directory
-        val publisher = makePublisher(outputDir, true, electionRecord.isJson())
+        val publisher = makePublisher(outputDir, true)
         publisher.writeElectionInitialized(electionInit)
     }
 

@@ -1,13 +1,9 @@
 package electionguard.webapps.decryptingtrustee
 
-import electionguard.core.ElementModP
-import io.ktor.server.application.*
+import org.cryptobiotic.eg.core.ElementModP
 
-import electionguard.core.productionGroup
-import electionguard.json2.DecryptRequest
-import electionguard.json2.publishJson
-import electionguard.publish.makePublisher
-import electionguard.publish.readElectionRecord
+import org.cryptobiotic.eg.publish.json.DecryptRequest
+import org.cryptobiotic.eg.publish.json.publishJson
 import electionguard.webapps.decryptingtrustee.plugins.configureRouting
 import electionguard.webapps.decryptingtrustee.plugins.configureSerialization
 

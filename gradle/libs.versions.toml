@@ -1,6 +1,7 @@
 [versions]
 coroutines-version = "1.8.0-RC2"
 kotlin-version = "1.9.22"
+kotest-version = "5.8.0"
 ktor-version = "2.3.4"
 xmlutil-version = "0.86.3"
 
@@ -38,12 +39,14 @@ kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-t
 ktor-server-tests-jvm = { module = "io.ktor:ktor-server-tests-jvm", version.ref = "ktor-version" }
 ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "kotlin-version" }
 junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params", version = "5.10.0" }
-kotest-property = { module = "io.kotest:kotest-property", version = "5.7.2" }
+kotest-property = { module = "io.kotest:kotest-property", version.ref = "kotest-version" }
+kotest-datatest = { module = "io.kotest:kotest-framework-datatest", version.ref = "kotest-version" }
+kotest-runner = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest-version" }
 mockk = { module = "io.mockk:mockk", version = "1.13.7" }
 
 [bundles]
-eglib = ["bull-result", "kotlinx-cli", "kotlinx-coroutines-core", "kotlinx-datetime", "kotlinx-serialization-json", "pbandk", "oshai-logging"]
-egtest = ["test-common", "test-annotations-common", "kotlinx-coroutines-test", "kotest-property"]
+eglib = ["bull-result", "kotlinx-cli", "kotlinx-coroutines-core", "kotlinx-datetime", "kotlinx-serialization-json", "oshai-logging"]
+egtest = ["test-common", "test-annotations-common", "kotlinx-coroutines-test", "kotest-runner", "kotest-property", "kotest-datatest"]
 jvmtest = ["junit-jupiter-params", "kotlin-test-junit5", "logback-classic", "mockk"]
 logging = ["oshai-logging", "logback-classic"]
 

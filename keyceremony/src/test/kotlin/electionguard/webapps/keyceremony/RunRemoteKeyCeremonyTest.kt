@@ -1,8 +1,8 @@
 package electionguard.webapps.keyceremony
 
-import electionguard.core.productionGroup
-import electionguard.publish.Consumer
-import electionguard.publish.makeConsumer
+import org.cryptobiotic.eg.core.productionGroup
+import org.cryptobiotic.eg.publish.Consumer
+import org.cryptobiotic.eg.publish.makeConsumer
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 
@@ -25,7 +25,7 @@ class RunRemoteKeyCeremonyTest {
                 "-epwd", "biotic",
             )
         )
-        val check = makeConsumer(productionGroup(), outputDir, false)
+        val check = makeConsumer(outputDir)
         assertNotNull(check)
     }
 
@@ -45,7 +45,7 @@ class RunRemoteKeyCeremonyTest {
                 "-epwd", "biotic",
             )
         )
-        val check = makeConsumer(productionGroup(), outputDir, false)
+        val check = makeConsumer(outputDir)
         assertNotNull(check)
     }
 

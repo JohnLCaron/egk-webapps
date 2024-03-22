@@ -3,10 +3,10 @@ package electionguard.webapps.server.routes
 import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.unwrap
 import com.github.michaelbull.result.unwrapError
-import electionguard.ballot.EncryptedBallot
-import electionguard.ballot.PlaintextBallot
-import electionguard.json2.*
-import electionguard.json2.EncryptionResponseJson
+import org.cryptobiotic.eg.election.EncryptedBallot
+import org.cryptobiotic.eg.election.PlaintextBallot
+import org.cryptobiotic.eg.publish.json.*
+import org.cryptobiotic.eg.publish.json.EncryptionResponseJson
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -99,7 +99,7 @@ fun Route.serverRouting() {
             "Missing id",
             status = HttpStatusCode.BadRequest
         )
-        val result = encryptionService.submit(device, ccode, EncryptedBallot.BallotState.SPOILED)
+        val result = encryptionService.submit(device, ccode, EncryptedBallot.BallotState.CHALLENGED)
         if (result is Ok) {
             call.respondText(
                 "EgkServer challenge ccode=${ccode} success",

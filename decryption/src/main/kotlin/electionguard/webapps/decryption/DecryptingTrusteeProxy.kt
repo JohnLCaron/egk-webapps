@@ -3,13 +3,9 @@ package electionguard.webapps.decryption
 import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.unwrap
 import com.github.michaelbull.result.unwrapError
-import electionguard.core.ElementModP
-import electionguard.core.GroupContext
-import electionguard.decrypt.ChallengeRequest
-import electionguard.decrypt.ChallengeResponse
-import electionguard.decrypt.DecryptingTrusteeIF
-import electionguard.decrypt.PartialDecryption
-import electionguard.json2.*
+import org.cryptobiotic.eg.core.ElementModP
+import org.cryptobiotic.eg.core.GroupContext
+import org.cryptobiotic.eg.publish.json.*
 
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -17,6 +13,9 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.HttpResponse
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
+import org.cryptobiotic.eg.core.ElGamalPublicKey
+import org.cryptobiotic.eg.core.ElementModQ
+import org.cryptobiotic.eg.decrypt.*
 
 /** Implement DecryptingTrusteeIF by connecting to a decryptingtrustee webapp. */
 class DecryptingTrusteeProxy(
@@ -25,7 +24,7 @@ class DecryptingTrusteeProxy(
     val remoteURL: String,
     val id: String,
     val xcoord: Int,
-    val publicKey: ElementModP,
+    val publicKey: ElGamalPublicKey,
     val isSSL: Boolean,
     val clientName: String,
     val clientPassword: String?,
@@ -46,7 +45,7 @@ class DecryptingTrusteeProxy(
             } else {
                 val publicKeyJson: ElementModPJson = response.body()
                 val remotePublicKey = publicKeyJson.import(group)
-                if (remotePublicKey != publicKey) {
+                if (remotePublicKey != publicKey.key) {
                     initError = "DecryptingTrustee $id publicKey does not match election record"
                 }
             }
@@ -55,9 +54,8 @@ class DecryptingTrusteeProxy(
     }
 
     override fun decrypt(
-        group: GroupContext,
         texts: List<ElementModP>,
-    ): List<PartialDecryption> {
+    ): PartialDecryptions {
         return runBlocking {
             val url = "$remoteURL/dtrustee/$id/decrypt"
             val response: HttpResponse = client.post(url) {
@@ -67,21 +65,21 @@ class DecryptingTrusteeProxy(
                 }
                 setBody(DecryptRequest(texts).publishJson())
             }
-            val decryptResponseJson: DecryptResponseJson = response.body()
-            val decryptResponses = decryptResponseJson.import(group)
-            if (decryptResponses is Ok) {
-                decryptResponses.unwrap().shares
+            val partialDecryptionsJson: PartialDecryptionsJson = response.body()
+            val partialDecryptionsResult = partialDecryptionsJson.import(group)
+            if (partialDecryptionsResult is Ok) {
+                partialDecryptionsResult.unwrap()
             } else {
-                println("$id decrypt = ${response.status} err = ${decryptResponses.unwrapError()}")
-                emptyList()
+                logger.error { "$id decrypt = ${response.status} err = ${partialDecryptionsResult.unwrapError()}" }
+                PartialDecryptions(partialDecryptionsResult.toString(), 0, emptyList())
             }
         }
     }
 
     override fun challenge(
-        group: GroupContext,
-        challenges: List<ChallengeRequest>,
-    ): List<ChallengeResponse> {
+        batchId: Int,
+        challenges: List<ElementModQ>,
+    ): ChallengeResponses {
         return runBlocking {
             val url = "$remoteURL/dtrustee/$id/challenge"
             val response: HttpResponse = client.post(url) {
@@ -89,16 +87,16 @@ class DecryptingTrusteeProxy(
                     append(HttpHeaders.ContentType, "application/json")
                     if (isSSL) basicAuth(clientName, clientPassword!!)
                 }
-                setBody(ChallengeRequests(challenges).publishJson())
+                setBody(ChallengeRequest(batchId, challenges).publishJson())
             }
             println("DecryptingTrusteeProxy challenge $id = ${response.status}")
             val challengeResponsesJson: ChallengeResponsesJson = response.body()
-            val challengeResponses = challengeResponsesJson.import(group)
-            if (challengeResponses is Ok) {
-                challengeResponses.unwrap().responses
+            val challengeResponsesResult = challengeResponsesJson.import(group)
+            if (challengeResponsesResult is Ok) {
+                challengeResponsesResult.unwrap()
             } else {
-                println("$id challenge = ${response.status} err = ${challengeResponses.unwrapError()}")
-                emptyList()
+                println("$id challenge = ${response.status} err = ${challengeResponsesResult.unwrapError()}")
+                ChallengeResponses(challengeResponsesResult.toString(), 0, emptyList())
             }
         }
     }
@@ -107,7 +105,7 @@ class DecryptingTrusteeProxy(
         return xcoord
     }
 
-    override fun guardianPublicKey(): ElementModP {
+    override fun guardianPublicKey(): ElGamalPublicKey {
         return publicKey
     }
 

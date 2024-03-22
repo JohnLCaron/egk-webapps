@@ -3,16 +3,16 @@ package electionguard.webapps.client
 import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.getError
 import com.github.michaelbull.result.unwrap
-import electionguard.ballot.PlaintextBallot
-import electionguard.core.ElGamalPublicKey
-import electionguard.core.GroupContext
-import electionguard.core.productionGroup
-import electionguard.input.RandomBallotProvider
-import electionguard.publish.makeConsumer
-import electionguard.publish.makePublisher
-import electionguard.publish.readElectionRecord
-import electionguard.util.ErrorMessages
-import electionguard.verifier.VerifyEncryptedBallots
+import org.cryptobiotic.eg.election.PlaintextBallot
+import org.cryptobiotic.eg.core.ElGamalPublicKey
+import org.cryptobiotic.eg.core.GroupContext
+import org.cryptobiotic.eg.core.productionGroup
+import org.cryptobiotic.eg.input.RandomBallotProvider
+import org.cryptobiotic.eg.publish.makeConsumer
+import org.cryptobiotic.eg.publish.makePublisher
+import org.cryptobiotic.eg.publish.readElectionRecord
+import org.cryptobiotic.util.ErrorMessages
+import org.cryptobiotic.eg.verifier.VerifyEncryptedBallots
 
 import io.ktor.client.*
 import io.ktor.client.engine.java.*
@@ -145,7 +145,7 @@ fun main(args: Array<String>) {
         return
     }
 
-    val electionRecord = readElectionRecord(group, inputDir)
+    val electionRecord = readElectionRecord(inputDir)
 
     // encrypt randomly generated ballots
     val inputBallots = mutableListOf<PlaintextBallot>()
@@ -188,7 +188,7 @@ fun main(args: Array<String>) {
 
     // optionally save the input ballots
    if (saveBallotsDir != null) {
-        val publisher = makePublisher(saveBallotsDir!!, false, true)
+        val publisher = makePublisher(saveBallotsDir!!, false)
         publisher.writePlaintextBallot(saveBallotsDir!!, inputBallots)
     }
 
@@ -197,7 +197,7 @@ fun main(args: Array<String>) {
 }
 
 fun verifyOutput(group: GroupContext, outputDir: String) {
-    val consumer = makeConsumer(group, outputDir, false)
+    val consumer = makeConsumer(outputDir, group)
     var count = 0
     consumer.iterateAllEncryptedBallots { true }.forEach {
         count++
@@ -207,7 +207,7 @@ fun verifyOutput(group: GroupContext, outputDir: String) {
     val record = readElectionRecord(consumer)
     val verifier = VerifyEncryptedBallots(
         group, record.manifest(),
-        ElGamalPublicKey(record.jointPublicKey()!!),
+        record.jointPublicKey()!!,
         record.extendedBaseHash()!!,
         record.config(), 1
     )

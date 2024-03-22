@@ -1,18 +1,12 @@
 package electionguard.webapps.decryption
 
 import com.github.michaelbull.result.*
-import electionguard.ballot.*
-import electionguard.cli.RunTrustedTallyDecryption
-import electionguard.core.GroupContext
-import electionguard.core.getSystemDate
-import electionguard.core.getSystemTimeInMillis
-import electionguard.core.productionGroup
-import electionguard.decrypt.DecryptingTrusteeIF
-import electionguard.decrypt.DecryptorDoerre
-import electionguard.decrypt.Guardians
-import electionguard.publish.makeConsumer
-import electionguard.publish.makePublisher
-import electionguard.util.ErrorMessages
+import org.cryptobiotic.eg.election.*
+import org.cryptobiotic.eg.decrypt.DecryptingTrusteeIF
+import org.cryptobiotic.eg.decrypt.Guardians
+import org.cryptobiotic.eg.publish.makeConsumer
+import org.cryptobiotic.eg.publish.makePublisher
+import org.cryptobiotic.util.ErrorMessages
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.required
@@ -24,6 +18,8 @@ import io.ktor.client.plugins.logging.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.cli.default
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.cryptobiotic.eg.core.*
+import org.cryptobiotic.eg.decrypt.TallyDecryptor
 import java.io.FileInputStream
 import java.security.KeyStore
 import javax.net.ssl.SSLContext
@@ -31,10 +27,10 @@ import javax.net.ssl.TrustManagerFactory
 import javax.net.ssl.X509TrustManager
 
 val group = productionGroup()
-private val logger = KotlinLogging.logger("RunRemoteDecryption")
+val logger = KotlinLogging.logger("RunRemoteDecryption")
 
 /**
- * Run Remote Decryption CLI.
+ * Run Remote Decryption CLI to decrypt the tally.
  * The DecryptingTrustee webapp(s) must already be running.
  */
 fun main(args: Array<String>) {
@@ -161,7 +157,7 @@ fun runRemoteDecrypt(
     }
     // reset(client, remoteUrl) // TODO ??
 
-    val consumerIn = makeConsumer(group, inputDir)
+    val consumerIn = makeConsumer(inputDir)
     val result = consumerIn.readTallyResult()
     if (result is Err) {
         throw RuntimeException(result.error.toString())
@@ -187,7 +183,7 @@ fun runRemoteDecrypt(
     // public fun <V, E> Iterable<Result<V, E>>.partition(): Pair<List<V>, List<E>> {
     val trusteeResults: List<Result<DecryptingTrusteeIF, String>> = presentGuardians.map {
         val proxy = DecryptingTrusteeProxy(
-            group, client, remoteUrl, it.guardianId, it.xCoordinate, it.publicKey(),
+            group, client, remoteUrl, it.guardianId, it.xCoordinate, ElGamalPublicKey(it.publicKey()),
             isSSL, clientName, clientPassword
         )
         if (proxy.initError == null) Ok(proxy) else Err(proxy.initError!!)
@@ -199,21 +195,23 @@ fun runRemoteDecrypt(
     }
 
     val guardians = Guardians(group, tallyResult.electionInitialized.guardians)
-    val decryptor = DecryptorDoerre(
+    val decryptor = TallyDecryptor(
         group,
         tallyResult.electionInitialized.extendedBaseHash,
-        tallyResult.electionInitialized.jointPublicKey(),
+        tallyResult.electionInitialized.jointPublicKey,
         guardians,
         trustees,
     )
+
+    // the TallyDecryptor calls remote trustees via the proxies
     val errs = ErrorMessages("RunRemoteDecryption")
-    val decryptedTally = with(decryptor) { tallyResult.encryptedTally.decrypt(errs) }
+    val decryptedTally = decryptor.decrypt(tallyResult.encryptedTally, errs)
     if (decryptedTally == null) {
         logger.error { "${errs}" }
         return false
     }
 
-    val publisher = makePublisher(outputDir, createNew = false, jsonSerialization = true) // LOOK
+    val publisher = makePublisher(outputDir, createNew = false) // LOOK
     publisher.writeDecryptionResult(
         DecryptionResult(
             tallyResult,
