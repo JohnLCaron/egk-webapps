@@ -11,7 +11,7 @@ repositories {
 // 9/9/2023
 val coroutinesVersion = "1.6.4" // "1.7.3" see issue #362
 val jupitorVersion = "5.10.0"
-val kotlinVersion = "1.9.10"
+val kotlinVersion = "1.9.22"
 val kotlinxCliVersion = "0.3.6"
 val kotlinxDatetimeVersion = "0.4.1"
 val kotlinxSerializationCoreVersion = "1.6.0"

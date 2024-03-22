@@ -3,10 +3,10 @@ package electionguard.webapps.keyceremony
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.unwrap
-import electionguard.core.*
-import electionguard.keyceremony.EncryptedKeyShare
-import electionguard.keyceremony.KeyShare
-import electionguard.keyceremony.keyCeremonyExchange
+import org.cryptobiotic.eg.core.*
+import org.cryptobiotic.eg.keyceremony.EncryptedKeyShare
+import org.cryptobiotic.eg.keyceremony.KeyShare
+import org.cryptobiotic.eg.keyceremony.keyCeremonyExchange
 
 import io.ktor.client.*
 import io.ktor.client.engine.java.*

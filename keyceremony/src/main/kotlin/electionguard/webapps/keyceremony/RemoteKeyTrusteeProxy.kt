@@ -3,15 +3,15 @@ package electionguard.webapps.keyceremony
 import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
-import electionguard.core.ElementModP
-import electionguard.core.GroupContext
-import electionguard.core.SchnorrProof
-import electionguard.json2.*
-import electionguard.keyceremony.KeyCeremonyTrusteeIF
-import electionguard.keyceremony.KeyShare
-import electionguard.keyceremony.PublicKeys
-import electionguard.keyceremony.EncryptedKeyShare
-import electionguard.util.ErrorMessages
+import org.cryptobiotic.eg.core.ElementModP
+import org.cryptobiotic.eg.core.GroupContext
+import org.cryptobiotic.eg.core.SchnorrProof
+import org.cryptobiotic.eg.publish.json.*
+import org.cryptobiotic.eg.keyceremony.KeyCeremonyTrusteeIF
+import org.cryptobiotic.eg.keyceremony.KeyShare
+import org.cryptobiotic.eg.keyceremony.PublicKeys
+import org.cryptobiotic.eg.keyceremony.EncryptedKeyShare
+import org.cryptobiotic.util.ErrorMessages
 
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -223,7 +223,7 @@ class RemoteKeyTrusteeProxy(
 
     override fun guardianPublicKey(): ElementModP {
         publicKeys()
-        return publicKeys?.publicKey()?.key ?: throw IllegalStateException()
+        return publicKeys?.publicKey ?: throw IllegalStateException()
     }
 
     override fun id(): String {

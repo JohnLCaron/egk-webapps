@@ -1,21 +1,21 @@
-# ElectionGuard-Kotlin-Multiplatform Webapps
+# EGK Webapps
 
-_last update 10/21/2023_
+_last update 03/08/24_
 
-[ElectionGuard-Kotlin-Multiplatform (EKM)](https://github.com/danwallach/electionguard-kotlin-multiplatform) 
-is a multiplatform Kotlin implementation of 
-[ElectionGuard](https://github.com/microsoft/electionguard), version 2.0, available under an MIT-style open source 
-[License](LICENSE). 
+These are webapps built on top of the [Egk Elliptic Curves library](https://github.com/JohnLCaron/egk-ec),
+and the [Verificatum library](https://www.verificatum.org/, including the option to use the Verificatum C library
 
-This repo contains web applications built on top of that library,
-using JetBrain's [ktor web framework](https://ktor.io/).
+This is a prototype feature and is not part of the ElectionGuard specification.
+The implementation for Elliptical Curves (EC) is taken largely from the [Verificatum library](https://www.verificatum.org/,
+including the option to use the Verificatum C library. See [VCR License](LICENSE_VCR.txt) for the license for this part of
+the library.
 
 Currently Java 17 is required.
 
 **Table of Contents**
 <!-- TOC -->
-* [ElectionGuard-Kotlin-Multiplatform Webapps](#electionguard-kotlin-multiplatform-webapps)
-  * [Build the Webapps fat jars](#build-the-webapps-fat-jars)
+* [EGK Webapps](#egk-webapps)
+  * [Build the Webapps Uber jars](#build-the-webapps-uber-jars)
   * [Remote Workflow](#remote-workflow)
   * [Remote KeyCeremony](#remote-keyceremony)
     * [The keyceremonytrustee program](#the-keyceremonytrustee-program)
@@ -28,14 +28,15 @@ Currently Java 17 is required.
     * [The decryptingtrustee program](#the-decryptingtrustee-program)
     * [The decryption program](#the-decryption-program)
   * [Run Verifier](#run-verifier)
+  * [Run Verifier](#run-verifier-1)
   * [Using SSL](#using-ssl)
     * [Make KeyStore](#make-keystore)
 <!-- TOC -->
 
-## Build the Webapps fat jars
+## Build the Webapps Uber jars
 
-1. Build all the webapps fat jars: _./gradlew clean assemble_
-2. Fat jars for the webapps are now in their respective build/libs directories:
+1. Build all the webapps uber jars: _./gradlew clean assemble_
+2. Uber jars for the webapps are now in their respective build/libs directories:
    1. **encryptserver/build/libs/encryptserver-all.jar**
    2. **encryptclient/build/libs/encryptclient-all.jar**
    3. **keyceremony/build/libs/keyceremony-all.jar**
@@ -305,6 +306,7 @@ Usage: RunAccumulateTally options_list
 Options: 
     --inputDir, -in -> Directory containing input ElectionInitialized record and encrypted ballots (always required) { String }
     --outputDir, -out -> Directory to write output election record (always required) { String }
+    --encryptDir, -eballots -> Read encrypted ballots here (optional) { String }
     --name, -name -> Name of tally { String }
     --createdBy, -createdBy -> who created { String }
     --help, -h -> Usage info 
@@ -313,11 +315,11 @@ Options:
 Example:
 
 ````
-/usr/lib/jvm/jdk-19/bin/java \
-  -classpath libs/egklib-all.jar \
-  electionguard.cli.RunAccumulateTally \
-    -in testOut/remoteWorkflow/electionRecord \
-    -out testOut/remoteWorkflow/electionRecord 
+/usr/bin/java \
+  -classpath build/libs/egk-ec-2.1-SNAPSHOT-uber.jar \
+  org.cryptobiotic.eg.cli.RunAccumulateTally \
+    -in testOut/cliWorkflow/electionRecordEc \
+    -out testOut/cliWorkflow/electionRecordEc 
 ````
 
 
@@ -436,6 +438,8 @@ To use SSL in decryption (see [Using SSL](#using-ssl)):
 
 Here for completeness
 
+## Run Verifier
+
 ```` 
 Usage: RunVerifier options_list
 Options: 
@@ -448,10 +452,10 @@ Options:
 Example:
 
 ````
-/usr/lib/jvm/jdk-19/bin/java \
-  -classpath libs/egklib-all.jar \
-  electionguard.cli.RunVerifier \
-    -in testOut/remoteWorkflow/electionRecord 
+/usr/bin/java \
+  -classpath build/libs/egk-ec-2.1-SNAPSHOT-uber.jar \
+  org.cryptobiotic.eg.cli.RunVerifier \
+  -in testOut/cliWorkflow/electionRecordEc
 ````
 
 

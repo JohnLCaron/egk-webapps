@@ -6,10 +6,20 @@ buildscript {
 }
 
 plugins {
-    kotlin("jvm") version "1.9.10"
+    kotlin("jvm") version "1.9.22"
     alias(libs.plugins.ktor)
     alias(libs.plugins.serialization)
     application
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
+}
+
+kotlin {
+    jvmToolchain(17)
 }
 
 repositories {
@@ -23,7 +33,8 @@ application {
 }
 
 dependencies {
-    implementation(files("../libs/egklib-jvm-2.0.4-SNAPSHOT.jar"))
+    implementation(files("../libs/egk-ec-2.1-SNAPSHOT.jar"))
+    implementation(files("../libs/verificatum-vecj-2.2.0.jar"))
     implementation(libs.bundles.eglib)
     implementation(libs.bundles.ktor.server)
 

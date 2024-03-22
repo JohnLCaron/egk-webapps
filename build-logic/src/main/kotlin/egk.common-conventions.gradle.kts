@@ -4,10 +4,20 @@ plugins {
     application
 }
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
+}
+
+kotlin {
+    jvmToolchain(17)
+}
+
 // 9/9/2023
 val coroutinesVersion = "1.6.4" // "1.7.3" see issue #362
 val jupitorVersion = "5.10.0"
-val kotlinVersion = "1.9.10"
+val kotlinVersion = "1.9.22"
 val kotlinxCliVersion = "0.3.6"
 val kotlinxDatetimeVersion = "0.4.1"
 val kotlinxSerializationCoreVersion = "1.6.0"
@@ -26,7 +36,7 @@ dependencies {
     }
 
     // TODO use versionCatalogs for the ones with versions ??
-    implementation(files("../libs/egklib-jvm-2.0.4-SNAPSHOT.jar"))
+    implementation(files("../libs/egk-ec-2.1-SNAPSHOT.jar"))
     implementation("com.michael-bull.kotlin-result:kotlin-result:$resultVersion")
     implementation("pro.streem.pbandk:pbandk-runtime:$pbandkVersion")
     implementation("io.github.microutils:kotlin-logging:$microutilsLoggingVersion")

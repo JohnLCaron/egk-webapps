@@ -2,9 +2,7 @@ package electionguard.webapps.keyceremonytrustee
 
 import io.ktor.server.application.*
 import io.ktor.server.plugins.callloging.*
-import electionguard.core.PowRadixOption
-import electionguard.core.ProductionMode
-import electionguard.core.productionGroup
+import org.cryptobiotic.eg.core.productionGroup
 import electionguard.webapps.keyceremonytrustee.plugins.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
@@ -24,7 +22,7 @@ private var egPassword = ""
 var isJson = true
 var isSSL = false
 var trusteeDir = "tmp"
-val groupContext = productionGroup(PowRadixOption.HIGH_MEMORY_USE, ProductionMode.Mode4096)
+val groupContext = productionGroup()
 
 // Note that there is no reference to the config parameters.
 fun main(args: Array<String>) {

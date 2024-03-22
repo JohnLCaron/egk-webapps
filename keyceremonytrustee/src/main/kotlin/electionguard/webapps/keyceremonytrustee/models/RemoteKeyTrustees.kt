@@ -3,14 +3,14 @@ package electionguard.webapps.keyceremonytrustee.models
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.Result
-import electionguard.core.UInt256
-import electionguard.json2.UInt256Json
+import org.cryptobiotic.eg.core.UInt256
+import org.cryptobiotic.eg.publish.json.UInt256Json
 
-import electionguard.keyceremony.KeyCeremonyTrustee
-import electionguard.keyceremony.PublicKeys
-import electionguard.keyceremony.EncryptedKeyShare
-import electionguard.keyceremony.KeyShare
-import electionguard.publish.makePublisher
+import org.cryptobiotic.eg.keyceremony.KeyCeremonyTrustee
+import org.cryptobiotic.eg.keyceremony.PublicKeys
+import org.cryptobiotic.eg.keyceremony.EncryptedKeyShare
+import org.cryptobiotic.eg.keyceremony.KeyShare
+import org.cryptobiotic.eg.publish.makePublisher
 import electionguard.webapps.keyceremonytrustee.groupContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
@@ -42,7 +42,7 @@ data class RemoteKeyTrustee(
 
     fun KeyCeremonyTrustee.saveState(trusteeDir: String, isJson: Boolean): Result<Boolean, String> {
         // store the trustees in some private place.
-        val trusteePublisher = makePublisher(trusteeDir, false, isJson)
+        val trusteePublisher = makePublisher(trusteeDir, false)
         return try {
             trusteePublisher.writeTrustee(trusteeDir, this)
             println("   Write $id to $trusteeDir")

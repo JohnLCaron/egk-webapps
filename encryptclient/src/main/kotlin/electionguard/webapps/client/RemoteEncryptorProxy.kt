@@ -3,11 +3,11 @@ package electionguard.webapps.client
 import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
-import electionguard.ballot.EncryptedBallot
-import electionguard.ballot.PlaintextBallot
-import electionguard.core.GroupContext
-import electionguard.json2.*
-import electionguard.util.ErrorMessages
+import org.cryptobiotic.eg.election.EncryptedBallot
+import org.cryptobiotic.eg.election.PlaintextBallot
+import org.cryptobiotic.eg.core.GroupContext
+import org.cryptobiotic.eg.publish.json.*
+import org.cryptobiotic.util.ErrorMessages
 
 import io.ktor.client.*
 import io.ktor.client.call.*

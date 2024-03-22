@@ -3,7 +3,7 @@ package electionguard.webapps.decryptingtrustee.routes
 import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.unwrap
 import electionguard.webapps.decryptingtrustee.groupContext
-import electionguard.json2.*
+import org.cryptobiotic.eg.publish.json.*
 import electionguard.webapps.decryptingtrustee.models.RemoteDecryptingTrusteeJson
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -11,6 +11,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.cryptobiotic.eg.decrypt.PartialDecryptions
 
 private val logger = KotlinLogging.logger("DecryptingTrusteeRoutes")
 private var trustees = mutableMapOf<String, RemoteDecryptingTrusteeJson>()
@@ -37,7 +38,7 @@ fun Route.trusteeRouting(trusteeDir: String, isJson : Boolean) {
             val trustee = RemoteDecryptingTrusteeJson(trusteeDir, isJson, id)
             trustees[id] = trustee
             println("RemoteDecryptingTrustee ${trustee.id()} created")
-            call.respond(trustee.publicKey().publishJson()) // ElementModP
+            call.respond(trustee.publicKey().key.publishJson()) // ElementModP
         } catch (t: Throwable) {
             logger.error(t) { " create RemoteDecryptingTrustee $id failed ${t.message}" }
             return@get call.respondText(
@@ -55,12 +56,11 @@ fun Route.trusteeRouting(trusteeDir: String, isJson : Boolean) {
             status = HttpStatusCode.NotFound
         )
         val decryptRequestJson = call.receive<DecryptRequestJson>()
-        val decryptRequest = decryptRequestJson.import(groupContext)
-        if (decryptRequest is Ok) {
-            val decryptions = trustee.decrypt(decryptRequest.unwrap().texts)
-            val response = DecryptResponse(decryptions)
+        val decryptRequestResult = decryptRequestJson.import(groupContext)
+        if (decryptRequestResult is Ok) {
+            val partialDecryptions: PartialDecryptions = trustee.decrypt(decryptRequestResult.unwrap())
             println("RemoteDecryptingTrustee ${trustee.id()} decrypt")
-            call.respond(response.publishJson())
+            call.respond(partialDecryptions.publishJson())
         } else {
             call.respondText("RemoteDecryptingTrustee $id decrypt failed", status = HttpStatusCode.InternalServerError)
         }
@@ -73,13 +73,13 @@ fun Route.trusteeRouting(trusteeDir: String, isJson : Boolean) {
             "No trustee with id $id",
             status = HttpStatusCode.NotFound
         )
-        val requestsJson = call.receive<ChallengeRequestsJson>()
-        val requests = requestsJson.import(groupContext)
-        if (requests is Ok) {
-            val responses = trustee.challenge(requests.unwrap().challenges)
-            val response = ChallengeResponses(responses)
+        val challengeRequestJson = call.receive<ChallengeRequestJson>()
+        val challengeRequestResult = challengeRequestJson.import(groupContext)
+        if (challengeRequestResult is Ok) {
+            val challengeRequest = challengeRequestResult.unwrap()
+            val challengeResponses = trustee.challenge(challengeRequest.batchId, challengeRequest.texts)
             println("RemoteDecryptingTrustee ${trustee.id()} challenge")
-            call.respond(response.publishJson())
+            call.respond(challengeResponses.publishJson())
         } else {
             call.respondText(
                 "RemoteDecryptingTrustee $id challenge failed",
