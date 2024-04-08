@@ -9,7 +9,6 @@ import kotlinx.serialization.json.*
 import kotlin.test.*
 
 import org.cryptobiotic.eg.election.PlaintextBallot
-import org.cryptobiotic.eg.core.productionGroup
 import org.cryptobiotic.eg.input.RandomBallotProvider
 import org.cryptobiotic.eg.publish.json.publishJson
 import org.cryptobiotic.eg.publish.json.EncryptionResponseJson
@@ -22,7 +21,6 @@ import electionguard.webapps.server.plugins.configureSerialization
 class EgkServerTest {
     val inputDir = "../testInput/chained"
     val outputDir = "testOut/encrypt/EgkServerTest"
-    val group = productionGroup()
 
     init {
         val electionRecord = readElectionRecord(inputDir)
@@ -34,7 +32,7 @@ class EgkServerTest {
 
     @Test
     fun testHello() = testApplication {
-        EncryptionService.initialize(group, inputDir, outputDir)
+        EncryptionService.initialize(inputDir, outputDir)
 
         application {
             configureRouting()
@@ -47,7 +45,7 @@ class EgkServerTest {
 
     @Test
     fun testBadRoute() = testApplication {
-        EncryptionService.initialize(group, inputDir, outputDir)
+        EncryptionService.initialize(inputDir, outputDir)
 
         application {
             configureRouting()
@@ -63,7 +61,7 @@ class EgkServerTest {
 
     @Test
     fun testBadCast() = testApplication {
-        EncryptionService.initialize(group, inputDir, outputDir)
+        EncryptionService.initialize(inputDir, outputDir)
 
         application {
             configureRouting()
@@ -79,7 +77,7 @@ class EgkServerTest {
 
     @Test
     fun testBadSpoil() = testApplication {
-        EncryptionService.initialize(group, inputDir, outputDir)
+        EncryptionService.initialize(inputDir, outputDir)
 
         application {
             configureRouting()
@@ -95,7 +93,7 @@ class EgkServerTest {
 
     @Test
     fun testEncrypt() = testApplication {
-        EncryptionService.initialize(group, inputDir, outputDir)
+        EncryptionService.initialize(inputDir, outputDir)
 
         application {
             configureRouting()

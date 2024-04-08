@@ -1,6 +1,6 @@
 # EGK Webapps
 
-_last update 03/22/24_
+_last update 04/07/24_
 
 These are webapps built on top of the [Egk Elliptic Curves library](https://github.com/JohnLCaron/egk-ec),
 and the [Verificatum library](https://www.verificatum.org/, including the option to use the Verificatum C library
@@ -103,8 +103,7 @@ Options:
 Example:
 
 ````
-/usr/lib/jvm/jdk-19/bin/java \
-  -classpath keyceremonytrustee/build/libs/keyceremonytrustee-all.jar \
+java -classpath keyceremonytrustee/build/libs/keyceremonytrustee-all.jar \
   electionguard.webapps.keyceremonytrustee.RunKeyCeremonyTrusteeKt \
   -trusteeDir testOut/remoteWorkflow/keyceremony/trustees 
 ````
@@ -122,8 +121,7 @@ KeyCeremonyRemoteTrustee server (no SSL) ready...
 To use SSL (see [Using SSL](#using-ssl)):
 
 ````
-/usr/lib/jvm/jdk-19/bin/java \
-    -classpath keyceremonytrustee/build/libs/keyceremonytrustee-all.jar \
+java -classpath keyceremonytrustee/build/libs/keyceremonytrustee-all.jar \
     electionguard.webapps.keyceremonytrustee.RunKeyCeremonyTrusteeKt \
     -trusteeDir testOut/remoteWorkflow/keyceremony/trustees \
     --keystorePassword $EG_KEYSTORE_PASSWORD \
@@ -150,8 +148,7 @@ Options:
 Example:
 
 ````
-/usr/lib/jvm/jdk-19/bin/java \
-  -classpath keyceremony/build/libs/keyceremony-all.jar \
+java -classpath keyceremony/build/libs/keyceremony-all.jar \
   electionguard.webapps.keyceremony.RunRemoteKeyCeremonyKt \
   --inputDir /home/stormy/dev/github/electionguard-kotlin-multiplatform/egklib/src/commonTest/data/startConfigJson \
   --outputDir testOut/remoteWorkflow/keyceremony 
@@ -197,8 +194,7 @@ You can check that the Election Configuration file was written to the outputDir.
 To use SSL (see [Using SSL](#using-ssl)):
 
 ````
-/usr/lib/jvm/jdk-19/bin/java \
-  -classpath keyceremony/build/libs/keyceremony-all.jar \
+java -classpath keyceremony/build/libs/keyceremony-all.jar \
   electionguard.webapps.keyceremony.RunRemoteKeyCeremonyKt \
   --inputDir /home/stormy/dev/github/electionguard-kotlin-multiplatform/testOut/cliWorkflow/electionRecord \
   --outputDir testOut/remoteWorkflow/keyceremony \
@@ -231,8 +227,7 @@ Options:
 Example:
 
 ````
-/usr/lib/jvm/jdk-19/bin/java \
-  -classpath encryptserver/build/libs/encryptserver-all.jar \
+java -classpath encryptserver/build/libs/encryptserver-all.jar \
   electionguard.webapps.server.RunEgkServerKt \
   --inputDir testOut/remoteWorkflow/keyceremony \
   --outputDir testOut/remoteWorkflow/electionRecord
@@ -276,8 +271,7 @@ Options:
 Example:
 
 ````
-/usr/lib/jvm/jdk-19/bin/java \
-  -classpath encryptclient/build/libs/encryptclient-all.jar \
+java -classpath encryptclient/build/libs/encryptclient-all.jar \
   electionguard.webapps.client.RunEgkClientKt \
   --inputDir testOut/remoteWorkflow/keyceremony \
   --outputDir testOut/remoteWorkflow/electionRecord \
@@ -315,8 +309,7 @@ Options:
 Example:
 
 ````
-/usr/bin/java \
-  -classpath build/libs/egk-ec-2.1-SNAPSHOT-uber.jar \
+java -classpath build/libs/egk-ec-2.1-SNAPSHOT-uber.jar \
   org.cryptobiotic.eg.cli.RunAccumulateTally \
     -in testOut/cliWorkflow/electionRecordEc \
     -out testOut/cliWorkflow/electionRecordEc 
@@ -355,8 +348,7 @@ Options:
 Example:
 
 ````
-/usr/lib/jvm/jdk-19/bin/java \
-  -classpath decryptingtrustee/build/libs/decryptingtrustee-all.jar \
+java -classpath decryptingtrustee/build/libs/decryptingtrustee-all.jar \
   electionguard.webapps.decryptingtrustee.RunDecryptingTrusteeKt \
   -trusteeDir testOut/remoteWorkflow/keyceremony/trustees  
 ````
@@ -413,8 +405,7 @@ Options:
 Example:
 
 ````
-/usr/lib/jvm/jdk-19/bin/java \
-  -classpath decryption/build/libs/decryption-all.jar \
+java -classpath decryption/build/libs/decryption-all.jar \
   electionguard.webapps.decryption.RunRemoteDecryptionKt \
   --inputDir  testOut/remoteWorkflow/electionRecord \
   --outputDir testOut/remoteWorkflow/electionRecord
@@ -452,8 +443,7 @@ Options:
 Example:
 
 ````
-/usr/bin/java \
-  -classpath build/libs/egk-ec-2.1-SNAPSHOT-uber.jar \
+java -classpath build/libs/egk-ec-2.1-SNAPSHOT-uber.jar \
   org.cryptobiotic.eg.cli.RunVerifier \
   -in testOut/cliWorkflow/electionRecordEc
 ````
@@ -497,8 +487,7 @@ Options:
 Example
 
 ````
-/usr/lib/jvm/jdk-19/bin/java \
-  -classpath keyceremonytrustee/build/libs/keyceremonytrustee-all.jar \
+java -classpath keyceremonytrustee/build/libs/keyceremonytrustee-all.jar \
   electionguard.webapps.keystore.MakeKeystoreKt \
   -kpwd $EG_KEYSTORE_PASSWORD \
   -epwd $ELECTIONGUARD_SSL_PASSWORD \

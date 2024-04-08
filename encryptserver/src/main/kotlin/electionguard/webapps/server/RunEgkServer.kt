@@ -58,8 +58,7 @@ fun main(args: Array<String>) {
             "  serverPort = '$serverPort'\n" +
             " ")
 
-    val groupContext = productionGroup()
-    EncryptionService.initialize(groupContext, inputDir, outputDir)
+    EncryptionService.initialize(inputDir, outputDir)
 
     if (isSSL) {
         egPassword = electionguardPassword!!
