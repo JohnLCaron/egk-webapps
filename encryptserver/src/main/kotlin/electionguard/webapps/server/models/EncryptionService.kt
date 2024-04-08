@@ -18,7 +18,6 @@ import org.cryptobiotic.eg.publish.readElectionRecord
 import org.cryptobiotic.util.ErrorMessages
 
 class EncryptionService private constructor(
-        val group: GroupContext,
         inputDir: String,
         val outputDir: String,
     ) {
@@ -73,7 +72,6 @@ class EncryptionService private constructor(
                 device,
                 outputDir,
                 "${outputDir}/invalidDir",
-                isJson,
             )
         }
     }
@@ -121,9 +119,9 @@ class EncryptionService private constructor(
     companion object {
         @Volatile private var instance: EncryptionService? = null
 
-        fun initialize(group: GroupContext, inputDir: String, outputDir: String) =
+        fun initialize(inputDir: String, outputDir: String) =
             instance ?: synchronized(this) {
-                instance ?: EncryptionService(group, inputDir, outputDir).also { instance = it }
+                instance ?: EncryptionService(inputDir, outputDir).also { instance = it }
             }
 
         // dont call until after initialized() is called
