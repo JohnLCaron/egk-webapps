@@ -1,6 +1,5 @@
 package electionguard.webapps.server
 
-import org.cryptobiotic.eg.core.productionGroup
 import electionguard.webapps.server.models.EncryptionService
 import electionguard.webapps.server.plugins.*
 import io.ktor.server.application.*
@@ -11,10 +10,10 @@ import kotlinx.cli.*
 import org.slf4j.LoggerFactory
 import java.io.*
 
-private var ksPassword = ""
 var egPassword = ""
 var isSSL = false
 
+// TODO allow multiple election records / manifests / jurisdictions
 fun main(args: Array<String>) {
     val parser = ArgParser("RunEgkServerKt")
     val inputDir by parser.option(
