@@ -219,7 +219,7 @@ fun verifyOutput(group: GroupContext, outputDir: String) {
 
     if (record.config().chainConfirmationCodes) {
         val chainErrs = ErrorMessages("EgkClient verify encrypted ballot chain")
-        verifier.verifyConfirmationChain(record, chainErrs)
+        verifier.verifyConfirmationChain(consumer, chainErrs)
         println(errs)
     }
 }
